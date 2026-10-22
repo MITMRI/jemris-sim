@@ -1,0 +1,460 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Parameters GradMaxAmpl="10.700515905539124" GradSlewRate="45.47719259854127" Name="epi_from_pulseq">
+  <ConcatSequence Name="C0">
+    <ATOMICSEQUENCE Name="C1">
+      <EXTERNALRFPULSE Name="R1" InitialDelay="0.0" InitialPhase="0.0" Frequency="0.0" Filename="rf_1.h5" Scale="1" Interpolate="0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C2">
+      <TRAPGRADPULSE Name="G1" FlatTopArea="-0.5149480274243112" FlatTopTime="0.25999999999999995" SlewRate="-9.902846681236754" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="G2" FlatTopArea="0.39269908169872414" FlatTopTime="0.19999999999999998" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <DELAYATOMICSEQUENCE Name="D1" Delay="3.9000000000000004" DelayType="B2E" />
+    <ATOMICSEQUENCE Name="C4">
+      <TRAPGRADPULSE Name="G3" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S1" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C5">
+      <TRAPGRADPULSE Name="G4" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C6">
+      <TRAPGRADPULSE Name="G5" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S2" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C7">
+      <TRAPGRADPULSE Name="G6" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C8">
+      <TRAPGRADPULSE Name="G7" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S3" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C9">
+      <TRAPGRADPULSE Name="G8" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C10">
+      <TRAPGRADPULSE Name="G9" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S4" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C11">
+      <TRAPGRADPULSE Name="G10" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C12">
+      <TRAPGRADPULSE Name="G11" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S5" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C13">
+      <TRAPGRADPULSE Name="G12" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C14">
+      <TRAPGRADPULSE Name="G13" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S6" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C15">
+      <TRAPGRADPULSE Name="G14" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C16">
+      <TRAPGRADPULSE Name="G15" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S7" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C17">
+      <TRAPGRADPULSE Name="G16" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C18">
+      <TRAPGRADPULSE Name="G17" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S8" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C19">
+      <TRAPGRADPULSE Name="G18" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C20">
+      <TRAPGRADPULSE Name="G19" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S9" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C21">
+      <TRAPGRADPULSE Name="G20" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C22">
+      <TRAPGRADPULSE Name="G21" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S10" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C23">
+      <TRAPGRADPULSE Name="G22" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C24">
+      <TRAPGRADPULSE Name="G23" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S11" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C25">
+      <TRAPGRADPULSE Name="G24" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C26">
+      <TRAPGRADPULSE Name="G25" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S12" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C27">
+      <TRAPGRADPULSE Name="G26" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C28">
+      <TRAPGRADPULSE Name="G27" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S13" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C29">
+      <TRAPGRADPULSE Name="G28" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C30">
+      <TRAPGRADPULSE Name="G29" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S14" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C31">
+      <TRAPGRADPULSE Name="G30" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C32">
+      <TRAPGRADPULSE Name="G31" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S15" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C33">
+      <TRAPGRADPULSE Name="G32" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C34">
+      <TRAPGRADPULSE Name="G33" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S16" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C35">
+      <TRAPGRADPULSE Name="G34" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C36">
+      <TRAPGRADPULSE Name="G35" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S17" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C37">
+      <TRAPGRADPULSE Name="G36" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C38">
+      <TRAPGRADPULSE Name="G37" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S18" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C39">
+      <TRAPGRADPULSE Name="G38" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C40">
+      <TRAPGRADPULSE Name="G39" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S19" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C41">
+      <TRAPGRADPULSE Name="G40" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C42">
+      <TRAPGRADPULSE Name="G41" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S20" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C43">
+      <TRAPGRADPULSE Name="G42" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C44">
+      <TRAPGRADPULSE Name="G43" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S21" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C45">
+      <TRAPGRADPULSE Name="G44" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C46">
+      <TRAPGRADPULSE Name="G45" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S22" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C47">
+      <TRAPGRADPULSE Name="G46" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C48">
+      <TRAPGRADPULSE Name="G47" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S23" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C49">
+      <TRAPGRADPULSE Name="G48" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C50">
+      <TRAPGRADPULSE Name="G49" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S24" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C51">
+      <TRAPGRADPULSE Name="G50" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C52">
+      <TRAPGRADPULSE Name="G51" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S25" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C53">
+      <TRAPGRADPULSE Name="G52" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C54">
+      <TRAPGRADPULSE Name="G53" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S26" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C55">
+      <TRAPGRADPULSE Name="G54" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C56">
+      <TRAPGRADPULSE Name="G55" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S27" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C57">
+      <TRAPGRADPULSE Name="G56" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C58">
+      <TRAPGRADPULSE Name="G57" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S28" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C59">
+      <TRAPGRADPULSE Name="G58" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C60">
+      <TRAPGRADPULSE Name="G59" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S29" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C61">
+      <TRAPGRADPULSE Name="G60" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C62">
+      <TRAPGRADPULSE Name="G61" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S30" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C63">
+      <TRAPGRADPULSE Name="G62" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C64">
+      <TRAPGRADPULSE Name="G63" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S31" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C65">
+      <TRAPGRADPULSE Name="G64" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C66">
+      <TRAPGRADPULSE Name="G65" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S32" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C67">
+      <TRAPGRADPULSE Name="G66" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C68">
+      <TRAPGRADPULSE Name="G67" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S33" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C69">
+      <TRAPGRADPULSE Name="G68" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C70">
+      <TRAPGRADPULSE Name="G69" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S34" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C71">
+      <TRAPGRADPULSE Name="G70" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C72">
+      <TRAPGRADPULSE Name="G71" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S35" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C73">
+      <TRAPGRADPULSE Name="G72" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C74">
+      <TRAPGRADPULSE Name="G73" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S36" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C75">
+      <TRAPGRADPULSE Name="G74" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C76">
+      <TRAPGRADPULSE Name="G75" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S37" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C77">
+      <TRAPGRADPULSE Name="G76" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C78">
+      <TRAPGRADPULSE Name="G77" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S38" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C79">
+      <TRAPGRADPULSE Name="G78" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C80">
+      <TRAPGRADPULSE Name="G79" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S39" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C81">
+      <TRAPGRADPULSE Name="G80" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C82">
+      <TRAPGRADPULSE Name="G81" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S40" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C83">
+      <TRAPGRADPULSE Name="G82" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C84">
+      <TRAPGRADPULSE Name="G83" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S41" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C85">
+      <TRAPGRADPULSE Name="G84" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C86">
+      <TRAPGRADPULSE Name="G85" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S42" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C87">
+      <TRAPGRADPULSE Name="G86" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C88">
+      <TRAPGRADPULSE Name="G87" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S43" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C89">
+      <TRAPGRADPULSE Name="G88" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C90">
+      <TRAPGRADPULSE Name="G89" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S44" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C91">
+      <TRAPGRADPULSE Name="G90" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C92">
+      <TRAPGRADPULSE Name="G91" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S45" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C93">
+      <TRAPGRADPULSE Name="G92" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C94">
+      <TRAPGRADPULSE Name="G93" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S46" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C95">
+      <TRAPGRADPULSE Name="G94" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C96">
+      <TRAPGRADPULSE Name="G95" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S47" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C97">
+      <TRAPGRADPULSE Name="G96" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C98">
+      <TRAPGRADPULSE Name="G97" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S48" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C99">
+      <TRAPGRADPULSE Name="G98" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C100">
+      <TRAPGRADPULSE Name="G99" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S49" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C101">
+      <TRAPGRADPULSE Name="G100" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C102">
+      <TRAPGRADPULSE Name="G101" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S50" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C103">
+      <TRAPGRADPULSE Name="G102" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C104">
+      <TRAPGRADPULSE Name="G103" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S51" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C105">
+      <TRAPGRADPULSE Name="G104" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C106">
+      <TRAPGRADPULSE Name="G105" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S52" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C107">
+      <TRAPGRADPULSE Name="G106" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C108">
+      <TRAPGRADPULSE Name="G107" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S53" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C109">
+      <TRAPGRADPULSE Name="G108" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C110">
+      <TRAPGRADPULSE Name="G109" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S54" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C111">
+      <TRAPGRADPULSE Name="G110" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C112">
+      <TRAPGRADPULSE Name="G111" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S55" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C113">
+      <TRAPGRADPULSE Name="G112" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C114">
+      <TRAPGRADPULSE Name="G113" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S56" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C115">
+      <TRAPGRADPULSE Name="G114" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C116">
+      <TRAPGRADPULSE Name="G115" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S57" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C117">
+      <TRAPGRADPULSE Name="G116" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C118">
+      <TRAPGRADPULSE Name="G117" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S58" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C119">
+      <TRAPGRADPULSE Name="G118" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C120">
+      <TRAPGRADPULSE Name="G119" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S59" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C121">
+      <TRAPGRADPULSE Name="G120" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C122">
+      <TRAPGRADPULSE Name="G121" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S60" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C123">
+      <TRAPGRADPULSE Name="G122" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C124">
+      <TRAPGRADPULSE Name="G123" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S61" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C125">
+      <TRAPGRADPULSE Name="G124" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C126">
+      <TRAPGRADPULSE Name="G125" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S62" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C127">
+      <TRAPGRADPULSE Name="G126" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C128">
+      <TRAPGRADPULSE Name="G127" FlatTopArea="1.5707963267948966" FlatTopTime="1.0" SlewRate="9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S63" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C129">
+      <TRAPGRADPULSE Name="G128" MaxAmpl="0.49087385212340523" Area="-0.02454369260617026" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GY" InitialDelay="0.0" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C130">
+      <TRAPGRADPULSE Name="G129" FlatTopArea="-1.5707963267948966" FlatTopTime="1.0" SlewRate="-9.817477042468106" Asymmetric="1.0" Axis="GX" InitialDelay="0.0" />
+      <TRAPGRADPULSE Name="S64" ADCs="64" FlatTopTime="1.0" FlatTopArea="0" InitialDelay="0.15999999999999998" />
+    </ATOMICSEQUENCE>
+    <ATOMICSEQUENCE Name="C131" />
+    <DELAYATOMICSEQUENCE Name="D2" Delay="4.5600000000000005" DelayType="B2E" />
+  </ConcatSequence>
+</Parameters>

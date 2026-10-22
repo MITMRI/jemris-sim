@@ -191,6 +191,43 @@ with h5py.File("examples/outputs/approved_sim.h5") as h:
 
 ---
 
+## Pulseq → JEMRIS XML (sequence conversion)
+
+JEMRIS natively speaks **XML**. Scanner / PyPulseq sequences are usually **Pulseq `.seq`**.  
+This repo includes a converter (adapted from [py2jemris](https://github.com/imr-framework/py2jemris)) so you can go:
+
+```text
+my_sequence.seq  →  tools/seq_to_jemris_xml.py  →  name.xml + rf_*.h5 / grad_*.h5
+```
+
+```bash
+# once: Python >= 3.10 + deps
+pip install -r tools/requirements-seq.txt
+
+# convert
+python tools/seq_to_jemris_xml.py path/to/seq.seq -o jemris_seq_out -n myseq
+# → jemris_seq_out/myseq.xml  (+ waveform HDF5 beside it)
+```
+
+Example checked in: `examples/sequences/epi_example.seq` (exported from our `epi.xml`).
+
+```bash
+python tools/seq_to_jemris_xml.py examples/sequences/epi_example.seq \
+  -o examples/sequences/epi_from_pulseq -n epi_from_pulseq
+```
+
+Wire the result into a `simu.xml` and **run jemris from that output directory** so relative `.h5` paths resolve:
+
+```xml
+<sequence name="epi_from_pulseq" uri="epi_from_pulseq.xml"/>
+```
+
+**Caveat:** Pulseq is unrolled; the XML will be flat (loops are not recovered), so sims can be slower than hand-written looped XML like `approved/epi.xml`.
+
+Other direction (XML → Pulseq) is built into jemris: `jemris sequence.xml -x -f outname`.
+
+---
+
 ## Run the reference example
 
 ```bash
@@ -229,6 +266,9 @@ src/                         # simulator core
 cmake/
 share/examples/approved/     # reference EPI inputs (simu / sample / coils / epi)
 examples/outputs/            # signals produced from those inputs
+examples/sequences/          # sample .seq + converted XML demo
+tools/seq_to_jemris_xml.py   # Pulseq → JEMRIS XML CLI
+tools/seq2xml/               # converter library
 run_jemris.sh
 ```
 
