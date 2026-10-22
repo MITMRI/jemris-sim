@@ -2,64 +2,67 @@
 
 MRI physics simulation based on [JEMRIS](https://github.com/JEMRIS/jemris), set up for the MIT MRI group.
 
-Pipeline in one line:
-
-**field / tissue / sequence inputs → Bloch (CVODE) simulation → coil signal vs time**
+**Pipeline:** field / tissue / sequence inputs → Bloch (CVODE) simulation → coil signal vs time
 
 ---
 
 ## How inputs become the signal
 
-At every time step, each spin feels an effective field roughly:
+At each time and position **r**, the spin feels an effective field:
 
-$$B_x, B_y \leftarrow \text{RF waveform} \times B_1^+(\mathbf{r})$$
+```text
+Bx, By  ←  RF waveform(t)  ×  B1+(r)          # transmit
+Bz      ←  B0(r)
+         + Gx(r)·gx(t) + Gy(r)·gy(t) + Gz(r)·gz(t)   # maps × waveforms
+         + …                                          # optional extras
+```
 
-$$B_z \leftarrow B_0(\mathbf{r}) + G_x(\mathbf{r})\,g_x(t) + G_y(\mathbf{r})\,g_y(t) + G_z(\mathbf{r})\,g_z(t) + \cdots$$
+Magnetization **M(r,t)** evolves with the Bloch equations. At each ADC time, each receive coil forms:
 
-Magnetization $\mathbf{M}(\mathbf{r},t)$ evolves with the Bloch equations. At each ADC time, coils form the receive signal from transverse magnetization weighted by $B_1^-(\mathbf{r})$:
+```text
+S(t)  =  Σ_spins   B1-(r) · Mxy(r,t) · exp(i φ)
+```
 
-$$S(t) = \sum_{\text{spins}} B_1^-(\mathbf{r})\, M_{xy}(\mathbf{r},t)\, e^{i\phi}$$
+So **every input exists to shape B, M, or the ADC times that produce S(t).**
 
-So **every input below exists to shape $B$, $\mathbf{M}$, or the sampling times that produce $S(t)$.**
-
-> Today’s checked-in example uses a **uniform** $B_0$ / linear gradients / ideal coil. The table also lists the **general** inputs we want (B0 map, G maps, …) and how they would correlate to the same signal outputs.
+Today’s checked-in example uses a **uniform** B0, **linear** gradients, and an **ideal** coil. The tables below also list the **general** inputs we care about (B0 map, G maps, …) and how each one shows up in the **same** signal outputs.
 
 ---
 
 ## Input ↔ simulation ↔ output (correlated)
 
-| You provide | What it controls in the sim | What you see in the output |
-|-------------|-----------------------------|----------------------------|
-| **Tissue / sample** (`sample.h5`) | Spin positions; $M_0$, $R_1$, $R_2$, $R_2^*$; per-spin off-resonance **DB** (stand-in for a $B_0$ error map) | Overall signal scale, decay / $T_2$ effects, dephasing from ΔB |
-| **$B_0(x,y,z)$ map** *(desired / general)* | Spatial main-field / off-resonance → enters $B_z$ | Phase accrual, ghosting-like dephasing, peak $\|S\|$ drops if spins disagree |
-| **$G_x,G_y,G_z(x,y,z)$ maps** *(desired / general)* | Spatial encoding fields (architecture-agnostic); with waveforms $g_i(t)$ set $B_z$ | k-space trajectory / encoding; distorted maps → distorted $S(t)$ / images |
-| **Gradient + RF waveforms** (sequence XML) | Time courses: RF amp/phase, $g_x(t),g_y(t),g_z(t)$, ADC schedule | *When* samples appear in `/signal/times`; encoding structure of $S(t)$ |
-| **TX coil / $B_1^+$ map** | Flip-angle / excitation pattern in space | How much $M_{xy}$ is created → amplitude of $S(t)$ |
-| **RX coil / $B_1^-$ map** | Spatial weight on each spin’s contribution | Channel signals in `/signal/channels/NN`; multi-coil if multiple maps |
-| **Sim driver** (`simu.xml`) | Wires sample + coils + sequence + Bloch/CVODE | One run → one (or more) signal files |
+| You provide | What it controls | What changes in the output |
+|-------------|------------------|----------------------------|
+| **Tissue / sample** (`sample.h5`) | Spin positions; M0, R1, R2, R2\*; per-spin off-resonance **DB** (B0-error stand-in) | Scale, decay, dephasing of `S(t)` |
+| **B0(x,y,z) map** *(general / desired)* | Spatial main field / off-resonance → enters **Bz** | Phase accrual; peak \|S\| drops if spins disagree |
+| **Gx, Gy, Gz (x,y,z) maps** *(general / desired)* | Spatial encoding fields (architecture-agnostic), times waveforms gx,gy,gz(t) | Encoding / trajectory baked into `S(t)` |
+| **RF + gradient waveforms** (sequence XML) | RF amp/phase, gx(t), gy(t), gz(t), **ADC schedule** | `/signal/times` length & values; structure of `S(t)` |
+| **TX / B1+ map** | Excitation pattern | How much Mxy is created → amplitude of `S` |
+| **RX / B1− map** | Spatial weight per spin / coil | `/signal/channels/00`, `01`, … |
+| **Sim driver** (`simu.xml`) | Wires sample + coils + sequence + Bloch/CVODE | One run → one signal (+ optional ISMRMRD) |
 
-**Outputs (always correlated back to those inputs):**
+**Outputs (always tied back to those inputs):**
 
-| Output | Contents | Tied to |
-|--------|----------|---------|
+| Output path | Contents | Driven by |
+|-------------|----------|-----------|
 | `/signal/times` | ADC timestamps (ms) | Sequence ADC schedule |
-| `/signal/channels/00` (…`NN`) | $(S_x, S_y, S_z)$ vs time | RX maps × evolved $M$; length = number of ADCs |
-| `*_ismrmrd.h5` | Same acquisition, ISMRMRD layout | Sequence headers + signal (for recon) |
-| Sequence dump (`*_seq` / `seqdiag/*`) | Waveforms TX/GX/GY/GZ vs time | Sequence XML only (no tissue) |
+| `/signal/channels/NN` | `(Sx, Sy, Sz)` vs time | RX maps × evolved M; length = #ADCs |
+| `*_ismrmrd.h5` | Same acquisition, ISMRMRD layout | Sequence + signal (for recon) |
+| Sequence dump (`seqdiag/*`) | TX / GX / GY / GZ vs time | Sequence XML only (no tissue) |
 
-$S(t)$ is **magnetization × sensitivity** (sim units), not SI probe volts—unless you apply a calibration factor later.
+`S(t)` is magnetization × sensitivity (sim units), **not** SI probe volts unless you apply a calibration later.
 
 ---
 
 ## Diagram
 
-```
+```text
  GENERAL INPUTS                         TODAY'S EXAMPLE FILES
  ────────────────                       ─────────────────────
- B0(x,y,z)          ─┐                  (uniform / DB=0 in sample.h5)
- Gx,Gy,Gz(x,y,z)    ─┼─►  B(r,t)       
- gx,gy,gz(t) + RF   ─┤                  epi.xml  (waveforms + ADCs)
- B1+(r), B1-(r)     ─┤                  uniform.xml  (IdealCoil)
+ B0(x,y,z)          ─┐                  (flat; DB=0 in sample.h5)
+ Gx,Gy,Gz(x,y,z)    ─┼─►  B(r,t)
+ gx,gy,gz(t) + RF   ─┤                  epi.xml   (waveforms + ADCs)
+ B1+(r), B1-(r)     ─┤                  uniform.xml (IdealCoil)
  tissue M0,R1,R2,…  ─┘                  sample.h5
 
               │
@@ -69,15 +72,16 @@ $S(t)$ is **magnetization × sensitivity** (sim units), not SI probe volts—unl
               ▼
      S(t) per RX channel
               │
-              ├─► *.h5          /signal/times , /signal/channels/*
-              └─► *_ismrmrd.h5  recon-ready copy
+              ├─► *.h5           /signal/times , /signal/channels/*
+              └─► *_ismrmrd.h5   recon-ready copy
 ```
 
 ---
 
-## Reference example (what is checked in)
+## Reference example (checked in)
 
-All specs under `share/examples/approved/`. Outputs under `examples/outputs/`.
+Specs: `share/examples/approved/`  
+Outputs from **this same input set**: `examples/outputs/`
 
 ### Driver — `simu.xml`
 
@@ -93,13 +97,13 @@ All specs under `share/examples/approved/`. Outputs under `examples/outputs/`.
 </simulate>
 ```
 
-| This line | Feeds into signal how |
-|-----------|------------------------|
-| `sample.h5` | Which spins exist and their relaxation / ΔB → shape of $S(t)$ |
-| `uniform.xml` (RX) | Weight = 1 for every spin → single channel `/signal/channels/00` |
+| Line in `simu.xml` | How it shows up in the signal |
+|--------------------|-------------------------------|
+| `sample.h5` | Which spins exist + relaxation / DB → shape of `S(t)` |
+| `uniform.xml` (RX) | Weight = 1 everywhere → single channel `/signal/channels/00` |
 | `uniform.xml` (TX) | Ideal excitation |
-| `epi.xml` | 4096 ADC times and EPI encoding → length and structure of $S(t)$ |
-| Bloch / CVODE | Physics engine that turns the above into $M$ then $S$ |
+| `epi.xml` | 4096 ADC times + EPI encoding → length/structure of `S(t)` |
+| Bloch / CVODE | Engine that turns the above into M, then S |
 
 ### Coil — `uniform.xml`
 
@@ -110,7 +114,7 @@ All specs under `share/examples/approved/`. Outputs under `examples/outputs/`.
 </CoilArray>
 ```
 
-Ideal coil ⇒ $B_1^\pm = 1$ everywhere ⇒ one channel, no spatial RX weighting.
+Ideal coil ⇒ B1± = 1 ⇒ one channel, no spatial RX weighting.
 
 ### Sequence — `epi.xml`
 
@@ -139,9 +143,9 @@ Ideal coil ⇒ $B_1^\pm = 1$ everywhere ⇒ one channel, no spatial RX weighting
 </Parameters>
 ```
 
-Plain terms: FOV 256×256, matrix 64×64, hard 90° RF, prephasers, TE = 50 ms, EPI readout (64 ADCs × 64 lines = **4096** samples), TR = 100 ms.
+Plain terms: FOV 256×256, matrix 64×64, hard 90° RF, prephasers, TE = 50 ms, EPI readout (**64 ADCs × 64 lines = 4096 samples**), TR = 100 ms.
 
-Those 4096 ADCs are exactly why the output arrays have length 4096.
+Those 4096 ADCs are why the output arrays have length **4096**.
 
 ### Sample — `sample.h5`
 
@@ -150,9 +154,9 @@ Those 4096 ADCs are exactly why the output arrays have length 4096.
 | Resolution | 1 mm × 1 mm × 1 mm |
 | Offset | (0, 0, 0) |
 | Live spins | 25 (“sphere”) |
-| Tissue props | $M_0=1$, $R_1=0.001$, $R_2=0.01$, $R_2^*=0.01$, $\mathrm{DB}=0$ |
+| Tissue props | M0 = 1, R1 = 0.001, R2 = 0.01, R2\* = 0.01, **DB = 0** |
 
-`DB = 0` here means **flat / uniform off-resonance** (no extra $B_0$ map). To study $B_0$ inhomogeneity with today’s engine, put a spatial ΔB into the sample’s `DB` field (or later: a dedicated $B_0$ volume).
+`DB = 0` ⇒ flat off-resonance (no extra B0 map). To study B0 inhomogeneity with today’s engine, write a spatial ΔB into the sample’s `DB` field (later: a dedicated B0 volume).
 
 ---
 
@@ -160,32 +164,30 @@ Those 4096 ADCs are exactly why the output arrays have length 4096.
 
 | File | What it is | Correlates to |
 |------|------------|---------------|
-| `examples/outputs/approved_sim.h5` | `/signal/times` shape `(4096,)`; `/signal/channels/00` shape `(4096, 3)` | `epi.xml` ADCs × `sample.h5` × ideal RX |
-| `examples/outputs/approved_sim_ismrmrd.h5` | ISMRMRD copy of the acquisition | same run, recon tools |
-| `examples/outputs/gre_seq.h5` | Sequence waveforms only | from `gre.xml` (no tissue signal) |
+| `examples/outputs/approved_sim.h5` | `/signal/times` `(4096,)`; `/signal/channels/00` `(4096, 3)` | `epi.xml` ADCs × `sample.h5` × ideal RX |
+| `examples/outputs/approved_sim_ismrmrd.h5` | ISMRMRD copy | same run, for recon tools |
+| `examples/outputs/gre_seq.h5` | Sequence waveforms only | `gre.xml` (no tissue signal) |
 
 From the EPI run:
 
-- Times ≈ **4.83 → 95.27 ms** (set by TE / readout timing in `epi.xml`)
-- **4096** samples (= $N_x \times N_y$)
+- Times ≈ **4.83 → 95.27 ms** ← TE / readout timing in `epi.xml`
+- **4096** samples ← Nx × Ny in `epi.xml`
 - Runtime ≈ **0.21 s** for this tiny phantom
 
 ```python
-import h5py
+import h5py, numpy as np
 with h5py.File("examples/outputs/approved_sim.h5") as h:
-    t = h["signal/times"][:]           # from sequence ADCs
-    s = h["signal/channels/00"][:]     # (n_adc, 3) = (Sx, Sy, Sz)
-    # peak |Mxy|-like magnitude from this input set:
-    import numpy as np
+    t = h["signal/times"][:]        # from sequence ADCs
+    s = h["signal/channels/00"][:]  # (n_adc, 3) = (Sx, Sy, Sz)
     peak = np.max(np.hypot(s[:, 0], s[:, 1]))
 ```
 
-Change an input → expect a matching change in $S(t)$ (examples):
+**Change an input → matching change in S(t):**
 
-- Stronger / denser sample $M_0$ → larger $\|S\|$
-- Nonzero $B_0$ / `DB` map → faster dephasing, usually lower peak $\|S\|$
-- Different TE / ADC grid in the sequence → different `/signal/times` and contrast
-- Non-uniform RX map → channel-weighted $S$; multiple coils → `channels/00`, `01`, …
+- Larger sample M0 → larger \|S\|
+- Nonzero B0 / DB map → more dephasing, usually lower peak \|S\|
+- Different TE / ADC grid → different `/signal/times` and contrast
+- Non-uniform RX map → weighted channels (`00`, `01`, …)
 
 ---
 
@@ -222,7 +224,7 @@ Includes a small HDF5 / `NDData` fix when `hsize_t` and `size_t` are the same ty
 
 ## Layout
 
-```
+```text
 src/                         # simulator core
 cmake/
 share/examples/approved/     # reference EPI inputs (simu / sample / coils / epi)
