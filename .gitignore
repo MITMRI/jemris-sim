@@ -127,3 +127,5 @@ share/examples/eddycurrents_signal.h5
 /runtest/
 *.sif
 jemris.def
+__pycache__/
+*.pyc
