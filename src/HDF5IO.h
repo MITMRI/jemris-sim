@@ -157,7 +157,7 @@ public:
 			H5::DataSpace dspace = dset.getSpace();
 			std::vector<hsize_t> dims (dspace.getSimpleExtentNdims());
 			size_t        ndim   = dspace.getSimpleExtentDims(&dims[0], NULL);
-			data                 = NDData<T> (dims);
+			data                 = NDData<T>::FromHDF5Dims (dims);
 
 			dset.read(data.Ptr(), HDF5Types<T>::Type());
 			dspace.close();

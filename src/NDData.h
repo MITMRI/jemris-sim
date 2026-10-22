@@ -120,14 +120,17 @@ public:
     }
 
     /**
-     * @brief ND-Data
+     * @brief ND-Data from HDF5 dimension vector (HDF5 order is reversed)
      *
-     * @param dims  Side lengths (HDF5 hsize_t)
+     * Separate from the size_t overload because on many 64-bit platforms
+     * hsize_t and size_t are the same type and cannot overload.
      */
-	NDData (const std::vector<hsize_t>& dims) {
-		_dims.resize(dims.size());
-		std::reverse_copy (dims.begin(), dims.end(), _dims.begin());
-    	_data.resize(prod(_dims));
+	static NDData FromHDF5Dims (const std::vector<hsize_t>& dims) {
+		NDData out;
+		out._dims.resize(dims.size());
+		std::reverse_copy (dims.begin(), dims.end(), out._dims.begin());
+		out._data.resize(prod(out._dims));
+		return out;
 	}
 
     /**
