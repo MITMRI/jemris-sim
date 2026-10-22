@@ -4,7 +4,7 @@ MRI physics simulation based on [JEMRIS](https://github.com/JEMRIS/jemris), set 
 
 **Pipeline:** field / tissue / sequence inputs → Bloch (CVODE) simulation → coil signal vs time
 
-**Quick links:** [convert Pulseq → XML](#pulseq--jemris-xml-sequence-conversion) · [run the EPI example](#run-the-reference-example) · [inputs ↔ outputs](#input--simulation--output-correlated)
+**Quick links:** [convert Pulseq → XML](#pulseq--jemris-xml-sequence-conversion) · [parse outputs](#how-to-parse-it-python) · [run the EPI example](#run-the-reference-example) · [inputs ↔ outputs](#input--simulation--output-correlated)
 
 ---
 
@@ -213,30 +213,98 @@ Those 4096 ADCs are why the output arrays have length **4096**.
 
 | File | What it is | Correlates to |
 |------|------------|---------------|
-| `examples/outputs/approved_sim.h5` | `/signal/times` `(4096,)`; `/signal/channels/00` `(4096, 3)` | `epi.xml` ADCs × `sample.h5` × ideal RX |
-| `examples/outputs/approved_sim_ismrmrd.h5` | ISMRMRD copy | same run, for recon tools |
+| `examples/outputs/approved_sim.h5` | JEMRIS native signal HDF5 | `epi.xml` ADCs × `sample.h5` × ideal RX |
+| `examples/outputs/approved_sim_ismrmrd.h5` | Same acquisition in ISMRMRD layout | recon tools |
 | `examples/outputs/gre_seq.h5` | Sequence waveforms only | `gre.xml` (no tissue signal) |
 
 From the EPI run:
 
-- Times ≈ **4.83 → 95.27 ms** ← TE / readout timing in `epi.xml`
-- **4096** samples ← Nx × Ny in `epi.xml`
+- Times ≈ **4.83 → 95.27 ms** (median Δt ≈ 0.0156 ms) ← TE / readout in `epi.xml`
+- **4096** samples ← Nx × Ny
+- Peak \|Mxy\|-like magnitude ≈ **0.65**
 - Runtime ≈ **0.21 s** for this tiny phantom
 
-```python
-import h5py, numpy as np
-with h5py.File("examples/outputs/approved_sim.h5") as h:
-    t = h["signal/times"][:]        # from sequence ADCs
-    s = h["signal/channels/00"][:]  # (n_adc, 3) = (Sx, Sy, Sz)
-    peak = np.max(np.hypot(s[:, 0], s[:, 1]))
+### Output layout (`approved_sim.h5`)
+
+```text
+approved_sim.h5
+├── signal/
+│   ├── times              float64 (N,)      ADC times in milliseconds
+│   └── channels/
+│       └── 00             float64 (N, 3)    channel 0: columns [Sx, Sy, Sz]
+│       └── 01             …                 (only if multi-coil RX)
+└── kspace                 float64 (…,)      optional k-space helper data
 ```
 
-**Change an input → matching change in S(t):**
+| Dataset | Shape (this example) | Meaning |
+|---------|----------------------|---------|
+| `/signal/times` | `(4096,)` | ADC clock (ms), set by the sequence |
+| `/signal/channels/00` | `(4096, 3)` | Coil 0 signal: **Sx, Sy, Sz** (mag × sensitivity units) |
+| `/signal/channels/NN` | `(N, 3)` | Extra RX channels if you used a multi-coil map |
+
+Complex transverse signal is `Sx + 1j·Sy`; `Sz` is the longitudinal component contributed at ADC times.
+
+### How to parse it (Python)
+
+```bash
+pip install h5py numpy matplotlib   # if needed
+```
+
+```python
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+
+path = "examples/outputs/approved_sim.h5"
+
+with h5py.File(path, "r") as h:
+    # list everything
+    h.visit(lambda name: print(name))
+
+    t = h["signal/times"][:]                 # (N,) ms
+    s = h["signal/channels/00"][:]           # (N, 3)
+
+sx, sy, sz = s[:, 0], s[:, 1], s[:, 2]
+mxy = sx + 1j * sy
+mag = np.abs(mxy)
+phase = np.angle(mxy)
+
+print(f"N = {len(t)}, t = [{t[0]:.3f}, {t[-1]:.3f}] ms")
+print(f"peak |Mxy| = {mag.max():.4f}")
+
+# optional: all coil channels
+with h5py.File(path, "r") as h:
+    chans = sorted(h["signal/channels"].keys())
+    stack = np.stack([h[f"signal/channels/{c}"][:, :2] for c in chans], axis=0)
+    # stack shape: (n_coils, N, 2) as (Sx, Sy)
+
+plt.figure(figsize=(8, 3))
+plt.plot(t, mag)
+plt.xlabel("time (ms)")
+plt.ylabel("|Sxy|")
+plt.title("Receive signal magnitude vs time")
+plt.tight_layout()
+plt.show()
+```
+
+### ISMRMRD file (`approved_sim_ismrmrd.h5`)
+
+Same acquisition, packaged for reconstruction toolchains:
+
+```text
+dataset/
+├── xml     experiment / encoding header (string)
+└── data    structured acquisitions (headers + traj + samples)
+```
+
+Prefer the native `approved_sim.h5` for quick analysis of `S(t)`. Use the ISMRMRD file with [ismrmrd](https://github.com/ismrmrd/ismrmrd) / BART / etc. when you want image recon.
+
+### What changes when you change inputs
 
 - Larger sample M0 → larger \|S\|
 - Nonzero B0 / DB map → more dephasing, usually lower peak \|S\|
 - Different TE / ADC grid → different `/signal/times` and contrast
-- Non-uniform RX map → weighted channels (`00`, `01`, …)
+- Non-uniform / multi-coil RX → weighted or multiple `/signal/channels/*`
 
 ---
 
