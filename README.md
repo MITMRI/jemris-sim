@@ -4,7 +4,7 @@ MRI physics simulation based on [JEMRIS](https://github.com/JEMRIS/jemris), set 
 
 **Pipeline:** field / tissue / sequence inputs → Bloch (CVODE) simulation → coil signal vs time
 
-**Quick links:** [convert Pulseq → XML](#pulseq--jemris-xml-sequence-conversion) · [parse outputs](#how-to-parse-it-python) · [run the EPI example](#run-the-reference-example) · [inputs ↔ outputs](#input--simulation--output-correlated)
+**Quick links:** [convert Pulseq → XML](#pulseq--jemris-xml-sequence-conversion) · [example output rows](#what-the-numbers-look-like) · [run the EPI example](#run-the-reference-example) · [inputs ↔ outputs](#input--simulation--output-correlated)
 
 ---
 
@@ -224,87 +224,53 @@ From the EPI run:
 - Peak \|Mxy\|-like magnitude ≈ **0.65**
 - Runtime ≈ **0.21 s** for this tiny phantom
 
-### Output layout (`approved_sim.h5`)
+### What the numbers look like
 
-```text
-approved_sim.h5
-├── signal/
-│   ├── times              float64 (N,)      ADC times in milliseconds
-│   └── channels/
-│       └── 00             float64 (N, 3)    channel 0: columns [Sx, Sy, Sz]
-│       └── 01             …                 (only if multi-coil RX)
-└── kspace                 float64 (…,)      optional k-space helper data
-```
+Inside `examples/outputs/approved_sim.h5`:
 
-| Dataset | Shape (this example) | Meaning |
-|---------|----------------------|---------|
-| `/signal/times` | `(4096,)` | ADC clock (ms), set by the sequence |
-| `/signal/channels/00` | `(4096, 3)` | Coil 0 signal: **Sx, Sy, Sz** (mag × sensitivity units) |
-| `/signal/channels/NN` | `(N, 3)` | Extra RX channels if you used a multi-coil map |
+- `/signal/times` → shape `(4096,)` — ADC time in **ms**
+- `/signal/channels/00` → shape `(4096, 3)` — columns **Sx, Sy, Sz**
 
-Complex transverse signal is `Sx + 1j·Sy`; `Sz` is the longitudinal component contributed at ADC times.
+First few ADC rows (channel 0):
 
-### How to parse it (Python)
+| time (ms) | Sx | Sy | Sz |
+|-----------:|---:|---:|---:|
+| 4.827813 | -0.001399 | 0.228364 | 0.005107 |
+| 4.843438 | -0.004424 | 0.240432 | 0.005123 |
+| 4.859063 | -0.007742 | 0.252342 | 0.005138 |
+| 4.874688 | -0.011347 | 0.264063 | 0.005154 |
+| 4.890313 | -0.015231 | 0.275568 | 0.005169 |
 
-```bash
-pip install h5py numpy matplotlib   # if needed
-```
+… (4096 rows total) …
+
+| time (ms) | Sx | Sy | Sz |
+|-----------:|---:|---:|---:|
+| 95.240937 | 0.072938 | 0.079514 | 0.091081 |
+| 95.256562 | 0.070378 | 0.074858 | 0.091096 |
+| 95.272187 | 0.067684 | 0.070243 | 0.091110 |
+
+Transverse signal at each row: `Sxy = Sx + 1j·Sy` (e.g. first row \|Sxy\| ≈ 0.228).
+
+### How to parse it
 
 ```python
 import h5py
 import numpy as np
-import matplotlib.pyplot as plt
 
-path = "examples/outputs/approved_sim.h5"
+with h5py.File("examples/outputs/approved_sim.h5", "r") as h:
+    t = h["signal/times"][:]              # (4096,) ms
+    s = h["signal/channels/00"][:]        # (4096, 3) → Sx, Sy, Sz
 
-with h5py.File(path, "r") as h:
-    # list everything
-    h.visit(lambda name: print(name))
-
-    t = h["signal/times"][:]                 # (N,) ms
-    s = h["signal/channels/00"][:]           # (N, 3)
+# print a few rows
+for i in range(5):
+    print(f"{t[i]:.6f}  {s[i,0]: .6e}  {s[i,1]: .6e}  {s[i,2]: .6e}")
 
 sx, sy, sz = s[:, 0], s[:, 1], s[:, 2]
-mxy = sx + 1j * sy
-mag = np.abs(mxy)
-phase = np.angle(mxy)
-
-print(f"N = {len(t)}, t = [{t[0]:.3f}, {t[-1]:.3f}] ms")
-print(f"peak |Mxy| = {mag.max():.4f}")
-
-# optional: all coil channels
-with h5py.File(path, "r") as h:
-    chans = sorted(h["signal/channels"].keys())
-    stack = np.stack([h[f"signal/channels/{c}"][:, :2] for c in chans], axis=0)
-    # stack shape: (n_coils, N, 2) as (Sx, Sy)
-
-plt.figure(figsize=(8, 3))
-plt.plot(t, mag)
-plt.xlabel("time (ms)")
-plt.ylabel("|Sxy|")
-plt.title("Receive signal magnitude vs time")
-plt.tight_layout()
-plt.show()
+sxy = sx + 1j * sy
+print("peak |Sxy| =", np.abs(sxy).max())
 ```
 
-### ISMRMRD file (`approved_sim_ismrmrd.h5`)
-
-Same acquisition, packaged for reconstruction toolchains:
-
-```text
-dataset/
-├── xml     experiment / encoding header (string)
-└── data    structured acquisitions (headers + traj + samples)
-```
-
-Prefer the native `approved_sim.h5` for quick analysis of `S(t)`. Use the ISMRMRD file with [ismrmrd](https://github.com/ismrmrd/ismrmrd) / BART / etc. when you want image recon.
-
-### What changes when you change inputs
-
-- Larger sample M0 → larger \|S\|
-- Nonzero B0 / DB map → more dephasing, usually lower peak \|S\|
-- Different TE / ADC grid → different `/signal/times` and contrast
-- Non-uniform / multi-coil RX → weighted or multiple `/signal/channels/*`
+(`pip install h5py numpy` if needed.) For image recon, use the companion `approved_sim_ismrmrd.h5` with ISMRMRD/BART tools instead.
 
 ---
 
