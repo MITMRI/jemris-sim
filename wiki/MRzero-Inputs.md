@@ -3,6 +3,18 @@
 MRzeroCore assembles an experiment from a phantom object and a sequence object
 or Pulseq file. Inputs are normally PyTorch tensors held by Python objects.
 
+## Input sections
+
+1. [Static magnetic field B0](#1-static-magnetic-field-b0)
+2. [Gradients](#2-gradients)
+3. [Sample, voxels, and spins](#3-sample-voxels-and-spins)
+   - [Geometry and voxel positions](#geometry-and-voxel-positions)
+   - [Tissue and magnetization properties](#tissue-and-magnetization-properties)
+   - [Explicit voxel example](#explicit-voxel-example)
+4. [RF, transmit fields, and receive coils](#4-rf-transmit-fields-and-receive-coils)
+5. [Sequence and ADC schedule](#5-sequence-and-adc-schedule)
+6. [Input checklist](#input-checklist)
+
 ## 1. Static magnetic field B0
 
 ### Representation
