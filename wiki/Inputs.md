@@ -15,27 +15,27 @@ rx_coils.xml ─── receive sensitivities and output channels
 
 The sample HDF5 describes the simulated spins and their physical properties.
 The reference example uses `sample.h5` with spin locations and tissue values
-such as $M_0$, $R_1$, $R_2$, $R_2^*$, and `DB`.
+such as `M_0`, `R_1`, `R_2`, `R_2*`, and `DB`.
 
 | Quantity | Meaning | Main signal effect |
 |---|---|---|
-| $M_0$ | Equilibrium magnetization / proton-density scale | Signal amplitude |
-| $R_1=1/T_1$ | Longitudinal relaxation rate | Recovery between excitations |
-| $R_2=1/T_2$ | Transverse relaxation rate | Transverse signal decay |
-| $R_2^*$ | Effective transverse decay rate | Additional dephasing |
+| `M_0` | Equilibrium magnetization / proton-density scale | Signal amplitude |
+| `R_1=1/T_1` | Longitudinal relaxation rate | Recovery between excitations |
+| `R_2=1/T_2` | Transverse relaxation rate | Transverse signal decay |
+| `R_2^*` | Effective transverse decay rate | Additional dephasing |
 | `DB` | Per-spin static off-resonance | Phase accrual and signal cancellation |
 | Position | Spin coordinate | Gradient encoding and coil weighting |
 
-For a longitudinal field deviation $\Delta B_\parallel$ in tesla, the
+For a longitudinal field deviation `ΔB∥` in tesla, the
 corresponding proton off-resonance is
 
-$$
+```math
 \Delta f(\mathbf r)
 =
 \frac{\gamma}{2\pi}\Delta B_\parallel(\mathbf r),
 \qquad
 \frac{\gamma}{2\pi}\approx42.57747892\times10^6\ \mathrm{Hz/T}.
-$$
+```
 
 ## Sequence
 
@@ -55,8 +55,8 @@ paths resolve correctly.
 
 ## Transmit and receive coils
 
-TX coil definitions determine the spatial RF excitation field $B_1^+$. RX
-coils determine the spatial receive weighting $B_1^-$ and the number of output
+TX coil definitions determine the spatial RF excitation field `B_1^+`. RX
+coils determine the spatial receive weighting `B_1^-` and the number of output
 signal channels. The minimal ideal-coil definition is
 
 ```xml
@@ -75,4 +75,3 @@ The checked-in EPI example starts with:
 - `share/examples/approved/uniform.xml`
 
 Next: [run the simulation](Simulation).
-

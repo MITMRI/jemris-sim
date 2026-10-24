@@ -4,17 +4,23 @@
 environment. It connects field, tissue, coil, and pulse-sequence inputs to a
 Bloch/CVODE simulation and produces receive-coil signal as a function of time.
 
-## Start here
+## Documentation sections
 
-- [Inputs](Inputs) — samples, fields, coils, and sequence files.
-- [Simulation](Simulation) — connect inputs in `simu.xml` and run JEMRIS.
-- [Outputs](Outputs) — native signal HDF5, ISMRMRD, and sequence diagnostics.
-- [Repository README](https://github.com/MITMRI/jemris-sim#readme) — installation,
-  the reference EPI example, output layout, and Pulseq conversion.
-- [JEMRIS vs. MRzeroCore](JEMRIS-vs.-MRzeroCore) — methods, equations, input
-  formats, and guidance on choosing a simulator.
-- [Pulseq to JEMRIS](https://github.com/MITMRI/jemris-sim#pulseq--jemris-xml-sequence-conversion)
-  — convert a Pulseq `.seq` file into JEMRIS XML and waveform files.
+### 1. [JEMRIS Documentation](JEMRIS-Documentation)
+
+Set up complete JEMRIS experiments using sample HDF5, sequence XML, transmit
+and receive coils, and a simulation driver. This section contains dedicated
+pages for [Inputs](Inputs), [Simulation](Simulation), and [Outputs](Outputs).
+
+### 2. [MRzero Documentation](MRzero-Documentation)
+
+Build differentiable MRI simulations in Python with MRzeroCore, PyTorch phantom
+tensors, native sequences, and Pulseq `.seq` files.
+
+### 3. [JEMRIS vs. MRzeroCore](JEMRIS-vs.-MRzeroCore)
+
+Compare their numerical methods, equations, data formats, field models,
+performance characteristics, and recommended use cases.
 
 ## Simulation pipeline
 

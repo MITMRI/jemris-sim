@@ -24,7 +24,7 @@ All relative paths are resolved from the working directory used to run JEMRIS.
 
 For each simulated spin, JEMRIS integrates
 
-$$
+```math
 \frac{d\mathbf M}{dt}
 =
 \gamma\mathbf M\times\mathbf B_{\mathrm{eff}}
@@ -34,18 +34,18 @@ M_x/T_2\\
 M_y/T_2\\
 (M_z-M_0)/T_1
 \end{bmatrix}.
-$$
+```
 
 The effective field combines the static field, gradient fields, and transmit RF
 field:
 
-$$
+```math
 \mathbf B_{\mathrm{eff}}(\mathbf r,t)
 =
 \mathbf B_0(\mathbf r)
 +\sum_j g_j(t)\mathbf G_j(\mathbf r)
 +\mathbf B_1(\mathbf r,t).
-$$
+```
 
 At each ADC time, the receive coils weight and sum transverse magnetization to
 form the measured channels.

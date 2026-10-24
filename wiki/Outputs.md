@@ -10,14 +10,14 @@ The primary datasets are:
 | HDF5 path | Shape | Meaning |
 |---|---:|---|
 | `/signal/times` | `(n_adc,)` | ADC timestamps in milliseconds |
-| `/signal/channels/00` | `(n_adc, 3)` | Signal components $S_x$, $S_y$, and $S_z$ for receive channel 0 |
+| `/signal/channels/00` | `(n_adc, 3)` | Signal components `S_x`, `S_y`, and `S_z` for receive channel 0 |
 | `/signal/channels/NN` | `(n_adc, 3)` | Additional receive channels when configured |
 
 The transverse complex signal is commonly formed as
 
-$$
+```math
 S_{xy}(t)=S_x(t)+iS_y(t).
-$$
+```
 
 A minimal Python reader is:
 
@@ -56,8 +56,7 @@ Checked-in examples are under `examples/outputs/`:
 | `approved_sim_ismrmrd.h5` | The same acquisition in ISMRMRD layout |
 | `gre_seq.h5` | GRE sequence waveform diagnostics |
 
-The reference EPI sequence has $64\times64=4096$ ADC samples, so its time and
+The reference EPI sequence has `64 × 64 = 4096` ADC samples, so its time and
 signal arrays contain 4096 rows.
 
 Previous: [run the simulation](Simulation). Return to [Home](Home).
-

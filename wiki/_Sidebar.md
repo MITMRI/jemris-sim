@@ -1,10 +1,24 @@
 ## jemris-sim
 
 - [Home](Home)
-- [Inputs](Inputs)
-- [Simulation](Simulation)
-- [Outputs](Outputs)
+
+### JEMRIS Documentation
+
+- [JEMRIS overview](JEMRIS-Documentation)
+  - [Inputs](Inputs)
+  - [Simulation](Simulation)
+  - [Outputs](Outputs)
+
+### MRzero Documentation
+
+- [MRzero overview](MRzero-Documentation)
+
+### Comparison
+
 - [JEMRIS vs. MRzeroCore](JEMRIS-vs.-MRzeroCore)
+
+### External links
+
 - [Repository](https://github.com/MITMRI/jemris-sim)
-- [Pulseq conversion](https://github.com/MITMRI/jemris-sim#pulseq--jemris-xml-sequence-conversion)
-- [JEMRIS documentation](https://www.jemris.org/)
+- [Official JEMRIS docs](https://www.jemris.org/)
+- [Official MRzeroCore docs](https://mrsources.github.io/MRzero-Core/)
