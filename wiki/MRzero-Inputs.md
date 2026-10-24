@@ -45,6 +45,17 @@ Gradient moments accumulate k-space displacement:
 \int_t^{t+\Delta t}\mathbf G(\tau)\,d\tau
 ```
 
+For physical gradients, the k-space increment has units of cycles per meter
+when the gyromagnetic ratio divided by two pi is in hertz per tesla and the
+gradient is in tesla per meter. The full trajectory is the cumulative sum of
+the event increments:
+
+```math
+\mathbf k_n
+=
+\mathbf k_{n-1}+\Delta\mathbf k_n
+```
+
 ### Normalized and physical gradients
 
 With normalized gradients, encoding steps are scaled to the phantom field of
@@ -52,12 +63,51 @@ view during simulation. With `sequence.normalized_grads = False`, physical SI
 gradient moments are used. Pulseq input supplies physical waveforms that are
 converted into MRzeroCore simulation events and k-space evolution.
 
+For normalized Cartesian encoding, a one-step increment along an axis
+corresponds conceptually to
+
+```math
+\Delta k_x=\frac{1}{\mathrm{FOV}_x},
+\qquad
+\Delta k_y=\frac{1}{\mathrm{FOV}_y},
+\qquad
+\Delta k_z=\frac{1}{\mathrm{FOV}_z}
+```
+
 ```math
 M_{xy}(\mathbf r)
 \longmapsto
 M_{xy}(\mathbf r)
 \exp\!\left(-i2\pi\,\Delta\mathbf k\cdot\mathbf r\right)
 ```
+
+### Linear-gradient assumption
+
+The standard PDG gradient operator assumes an ideal spatially linear encoding
+field:
+
+```math
+B_{\mathrm{grad}}(\mathbf r,t)
+=
+G_x(t)x+G_y(t)y+G_z(t)z
+```
+
+This linearity is what turns a gradient event into a global k-space shift in
+the phase-distribution state. A nonlinear gradient field would instead produce
+
+```math
+\Delta\phi(\mathbf r)
+=
+\gamma\int
+\left[
+g_x(t)G_x(\mathbf r)
++g_y(t)G_y(\mathbf r)
++g_z(t)G_z(\mathbf r)
+\right]dt
+```
+
+which generally cannot be represented by one global k-space shift. The native
+`rep.gradm` operator therefore represents ideal linear encoding gradients.
 
 ## 3. Sample, voxels, and spins
 

@@ -49,6 +49,42 @@ B_z(\mathbf r,t)
 +g_z(t)G_z(\mathbf r)
 ```
 
+For ideal linear gradients, the spatial fields reduce to the Cartesian
+coordinates and the gradient contribution becomes
+
+```math
+B_{\mathrm{grad}}(\mathbf r,t)
+=
+\mathbf G(t)\cdot\mathbf r
+```
+
+The gradient-induced phase and associated k-space increment are then
+
+```math
+\Delta\phi(\mathbf r)
+=
+\gamma\int_t^{t+\Delta t}
+\mathbf G(\tau)\cdot\mathbf r\,d\tau
+=
+2\pi\,\Delta\mathbf k\cdot\mathbf r
+```
+
+```math
+\Delta\mathbf k
+=
+\frac{\gamma}{2\pi}
+\int_t^{t+\Delta t}\mathbf G(\tau)\,d\tau,
+\qquad
+\mathbf k_n=\mathbf k_{n-1}+\Delta\mathbf k_n
+```
+
+When the gradient is expressed in tesla per meter and the gyromagnetic ratio
+divided by two pi is expressed in hertz per tesla, k-space is expressed in
+cycles per meter. JEMRIS itself evolves each spin from the configured spatial
+field, so a nonlinear spatial gradient or a concomitant-field term does not
+need to be collapsed into one global k-space increment. In that case, phase is
+evaluated from the local field experienced by each spin.
+
 ### Pulseq input
 
 Convert Pulseq into JEMRIS XML and referenced waveform files with:
