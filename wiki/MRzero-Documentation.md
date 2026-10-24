@@ -16,6 +16,10 @@ python -m pip install MRzeroCore
 
 ## Inputs
 
+See **[Unified Inputs](Inputs)** for a field-by-field comparison of JEMRIS and
+MRzeroCore, including B0, gradients, sample/voxel properties, RF fields, receive
+coils, sequences, units, and file/tensor layouts.
+
 MRzeroCore normally receives two Python objects:
 
 - a sequence: `mr0.Sequence`, a PyPulseq sequence, or a Pulseq `.seq` path;
@@ -92,4 +96,3 @@ See the [comparison](JEMRIS-vs.-MRzeroCore) for the mathematical distinction.
 - [MRzeroCore source](https://github.com/MRsources/MRzero-Core)
 - [MRzeroCore FID example](https://github.com/MRsources/MRzero-Core/blob/main/documentation/playground_mr0/mr0_FID_seq.ipynb)
 - [PDG method paper](https://doi.org/10.1002/mrm.30055)
-
