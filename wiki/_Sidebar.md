@@ -5,14 +5,14 @@
 ### JEMRIS Documentation
 
 - [JEMRIS overview](JEMRIS-Documentation)
-  - [Unified inputs](Inputs)
+  - [Inputs](Inputs)
   - [Simulation](Simulation)
   - [Outputs](Outputs)
 
 ### MRzero Documentation
 
 - [MRzero overview](MRzero-Documentation)
-  - [Unified inputs](Inputs)
+  - [Inputs](MRzero-Inputs)
 
 ### Comparison
 

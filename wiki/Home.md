@@ -15,7 +15,8 @@ pages for [Inputs](Inputs), [Simulation](Simulation), and [Outputs](Outputs).
 ### 2. [MRzero Documentation](MRzero-Documentation)
 
 Build differentiable MRI simulations in Python with MRzeroCore, PyTorch phantom
-tensors, native sequences, and Pulseq `.seq` files.
+tensors, native sequences, and Pulseq `.seq` files. Start with
+[MRzeroCore Inputs](MRzero-Inputs).
 
 ### 3. [JEMRIS vs. MRzeroCore](JEMRIS-vs.-MRzeroCore)
 

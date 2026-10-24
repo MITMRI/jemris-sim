@@ -16,9 +16,8 @@ python -m pip install MRzeroCore
 
 ## Inputs
 
-See **[Unified Inputs](Inputs)** for a field-by-field comparison of JEMRIS and
-MRzeroCore, including B0, gradients, sample/voxel properties, RF fields, receive
-coils, sequences, units, and file/tensor layouts.
+See **[MRzeroCore Inputs](MRzero-Inputs)** for B0, gradients, sample and voxel
+properties, RF fields, receive coils, sequences, units, and tensor layouts.
 
 MRzeroCore normally receives two Python objects:
 
