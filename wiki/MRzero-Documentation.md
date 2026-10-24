@@ -47,6 +47,10 @@ For hydrogen, convert a measured longitudinal field deviation using
 
 ## Simulation
 
+See **[MRzeroCore Simulation](MRzero-Simulation)** for the full numerical
+workflow: graph construction, analytical RF/free-evolution operators, voxelwise
+magnetization, receive-coil weighting, and net-signal accumulation.
+
 The high-level workflow is concise:
 
 ```python
