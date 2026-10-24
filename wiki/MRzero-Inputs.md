@@ -68,15 +68,57 @@ the event increments:
 \mathbf k_{n-1}+\Delta\mathbf k_n
 ```
 
+Here, `n` indexes a sequence event or time interval. The increment during that
+event and the position after it are, respectively,
+
+```math
+\Delta\mathbf k_n
+\quad\text{and}\quad
+\mathbf k_n.
+```
+
 ### Normalized and physical gradients
 
-With normalized gradients, encoding steps are scaled to the phantom field of
-view during simulation. With `sequence.normalized_grads = False`, physical SI
-gradient moments are used. Pulseq input supplies physical waveforms that are
-converted into MRzeroCore simulation events and k-space evolution.
+When `sequence.normalized_grads = True`, values in `rep.gradm` are dimensionless
+encoding steps rather than fixed physical k-space increments. During
+simulation, MRzeroCore reads the physical phantom extent
 
-For normalized Cartesian encoding, a one-step increment along an axis
-corresponds conceptually to
+```math
+\mathbf L=
+\begin{bmatrix}L_x & L_y & L_z\end{bmatrix}^{\mathsf T}
+```
+
+and applies the axis-wise scale
+
+```math
+\mathbf q=
+\begin{bmatrix}
+1/L_x & 1/L_y & 1/L_z
+\end{bmatrix}^{\mathsf T}.
+```
+
+Let the normalized gradient-moment vector for event `n` be denoted by
+
+```math
+\Delta\widetilde{\mathbf k}_n.
+```
+
+Its physical k-space increment is
+
+```math
+\Delta\mathbf k_n
+=
+\begin{bmatrix}
+1/L_x & 0 & 0\\
+0 & 1/L_y & 0\\
+0 & 0 & 1/L_z
+\end{bmatrix}
+\Delta\widetilde{\mathbf k}_n.
+```
+
+Consequently, a normalized step of one along an axis is one reciprocal-FOV
+step:
+
 
 ```math
 \Delta k_x=\frac{1}{\mathrm{FOV}_x},
@@ -85,6 +127,43 @@ corresponds conceptually to
 \qquad
 \Delta k_z=\frac{1}{\mathrm{FOV}_z}
 ```
+
+For example, if
+
+```math
+\mathrm{FOV}_x=0.20\ \mathrm{m},
+```
+
+then a normalized x-gradient step of one becomes
+
+```math
+\Delta k_x
+=
+\frac{1}{0.20\ \mathrm m}
+=
+5\ \mathrm{cycles/m}.
+```
+
+For `N_x` Cartesian samples separated by this increment, the nominal spatial
+resolution is
+
+```math
+\Delta x
+=
+\frac{1}{N_x\Delta k_x}
+=
+\frac{\mathrm{FOV}_x}{N_x}.
+```
+
+The purpose of normalization is to let the same dimensionless sequence encode
+the same matrix layout for phantoms with different physical field-of-view
+sizes. Changing the phantom size changes the physical gradient moment and
+k-space spacing automatically. An axis whose phantom extent is zero is assigned
+a zero scale to avoid division by zero.
+
+When `sequence.normalized_grads = False`, MRzeroCore does not apply reciprocal-
+FOV scaling: `rep.gradm` already contains physical SI-based k-space increments.
+Sequences imported from Pulseq use this physical convention.
 
 ```math
 M_{xy}(\mathbf r)
