@@ -12,10 +12,12 @@
     - [RF and coils](Inputs#4-rf-transmit-fields-and-receive-coils)
     - [Sequence and ADC](Inputs#5-sequence-and-adc-schedule)
   - [Simulation](Simulation)
-    - [Initialization](Simulation#2-initialize-each-spin)
-    - [Effective field](Simulation#3-evaluate-the-effective-field)
-    - [Bloch integration](Simulation#4-integrate-the-bloch-equations)
-    - [Net signal](Simulation#6-form-the-net-signal)
+    - [Preparation](Simulation#1-prepare-the-simulation)
+    - [Initialization](Simulation#2-initialize-the-simulation-state)
+    - [Sequence and fields](Simulation#3-evaluate-the-sequence-and-fields)
+    - [Magnetization evolution](Simulation#4-evolve-the-magnetization)
+    - [ADC evaluation](Simulation#5-evaluate-magnetization-at-adc-samples)
+    - [Net signal](Simulation#6-form-the-net-receive-signal)
   - [Outputs](Outputs)
 
 ### MRzero Documentation
@@ -28,10 +30,12 @@
     - [RF and coils](MRzero-Inputs#4-rf-transmit-fields-and-receive-coils)
     - [Sequence and ADC](MRzero-Inputs#5-sequence-and-adc-schedule)
   - [Simulation](MRzero-Simulation)
-    - [Phase graph](MRzero-Simulation#2-construct-the-phase-graph)
-    - [Event operators](MRzero-Simulation#4-apply-rf-and-free-evolution-operators)
-    - [Voxel magnetization](MRzero-Simulation#5-evaluate-voxel-magnetization)
-    - [Net signal](MRzero-Simulation#6-form-the-net-signal)
+    - [Preparation](MRzero-Simulation#1-prepare-the-simulation)
+    - [Initialization](MRzero-Simulation#2-initialize-the-simulation-state)
+    - [Sequence and fields](MRzero-Simulation#3-evaluate-the-sequence-and-fields)
+    - [Magnetization evolution](MRzero-Simulation#4-evolve-the-magnetization)
+    - [ADC evaluation](MRzero-Simulation#5-evaluate-magnetization-at-adc-samples)
+    - [Net signal](MRzero-Simulation#6-form-the-net-receive-signal)
 
 ### Comparison
 

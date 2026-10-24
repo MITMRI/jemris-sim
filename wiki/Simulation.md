@@ -5,15 +5,16 @@ sums the receive-coil-weighted magnetization at each ADC time.
 
 ## Simulation sections
 
-1. [Connect the inputs](#1-connect-the-inputs)
-2. [Initialize each spin](#2-initialize-each-spin)
-3. [Evaluate the effective field](#3-evaluate-the-effective-field)
-4. [Integrate the Bloch equations](#4-integrate-the-bloch-equations)
-5. [Sample the receive signal](#5-sample-the-receive-signal)
-6. [Form the net signal](#6-form-the-net-signal)
-7. [Run and scale the simulation](#7-run-and-scale-the-simulation)
+1. [Prepare the simulation](#1-prepare-the-simulation)
+2. [Initialize the simulation state](#2-initialize-the-simulation-state)
+3. [Evaluate the sequence and fields](#3-evaluate-the-sequence-and-fields)
+4. [Evolve the magnetization](#4-evolve-the-magnetization)
+5. [Evaluate magnetization at ADC samples](#5-evaluate-magnetization-at-adc-samples)
+6. [Form the net receive signal](#6-form-the-net-receive-signal)
+7. [Control accuracy and performance](#7-control-accuracy-and-performance)
+8. [Run the simulation](#8-run-the-simulation)
 
-## 1. Connect the inputs
+## 1. Prepare the simulation
 
 The simulation driver selects the sample, coils, sequence, and physical model:
 
@@ -32,7 +33,7 @@ JEMRIS expands the sequence tree into atomic modules and time points of
 interest. These include waveform boundaries, ADC samples, and other times at
 which the solver must stop or expose magnetization.
 
-## 2. Initialize each spin
+## 2. Initialize the simulation state
 
 For every sample entry with nonzero equilibrium magnetization, JEMRIS loads its
 position and tissue properties and initializes longitudinal equilibrium:
@@ -48,7 +49,7 @@ position and tissue properties and initializes longitudinal equilibrium:
 The sequence tree is then traversed independently for spin `j`. With multiple
 compartments, each spin carries one magnetization state per compartment.
 
-## 3. Evaluate the effective field
+## 3. Evaluate the sequence and fields
 
 Whenever the ODE solver requests a derivative at time `t`, JEMRIS evaluates the
 current sequence waveforms at the spin's current position. In the rotating
@@ -76,7 +77,7 @@ respiration, diffusion, off-resonance, relaxation rates, or equilibrium
 magnetization. Thus the right-hand side is evaluated using the state and field
 values at the solver's requested time, not merely at ADC times.
 
-## 4. Integrate the Bloch equations
+## 4. Evolve the magnetization
 
 For a single pool, the physical equation is
 
@@ -134,7 +135,7 @@ with tighter accuracy.
 For multi-pool exchange, the Bloch-McConnell CVODE model integrates the coupled
 magnetization system instead.
 
-## 5. Sample the receive signal
+## 5. Evaluate magnetization at ADC samples
 
 At an ADC time, the solver has produced a magnetization state for spin `j`:
 
@@ -157,7 +158,7 @@ The implementation accumulates real and imaginary transverse components into
 the selected ADC row for every coil and compartment. It can also retain a
 longitudinal component for diagnostic output.
 
-## 6. Form the net signal
+## 6. Form the net receive signal
 
 The net channel signal is the discrete sum over all live spins and, when
 present, tissue compartments:
@@ -186,7 +187,19 @@ dependent scaling. The resulting arrays are written under
 `/signal/channels/NN`, with ADC timestamps in `/signal/times`; ISMRMRD export
 places the complex transverse samples into acquisition channels.
 
-## 7. Run and scale the simulation
+## 7. Control accuracy and performance
+
+Runtime generally increases with spin count, sequence duration and waveform
+complexity, solver tolerances, ADC/evolution time points, motion/physical
+models, compartments, and coils. MPI partitions the spin ensemble across
+processes; partial coil signals are combined to obtain the global result.
+
+Accuracy is primarily controlled by CVODE's relative and componentwise
+absolute tolerances. Tighter tolerances force smaller or more numerous internal
+steps. The number of output ADC samples does not by itself set the ODE step
+size: CVODE chooses additional internal evaluations as required.
+
+## 8. Run the simulation
 
 Run the checked-in example from the repository root:
 
@@ -194,10 +207,4 @@ Run the checked-in example from the repository root:
 ./run_jemris.sh
 ```
 
-Runtime generally increases with spin count, sequence duration and waveform
-complexity, solver tolerances, ADC/evolution time points, motion/physical
-models, compartments, and coils. MPI partitions the spin ensemble across
-processes; partial coil signals are combined to obtain the global result.
-
 Previous: [JEMRIS Inputs](Inputs). Next: [Outputs](Outputs).
-

@@ -7,15 +7,16 @@ sums the receive-coil-weighted transverse magnetization at ADC events.
 
 ## Simulation sections
 
-1. [Build simulation data](#1-build-simulation-data)
-2. [Construct the phase graph](#2-construct-the-phase-graph)
-3. [Initialize magnetization](#3-initialize-magnetization)
-4. [Apply RF and free-evolution operators](#4-apply-rf-and-free-evolution-operators)
-5. [Evaluate voxel magnetization](#5-evaluate-voxel-magnetization)
-6. [Form the net signal](#6-form-the-net-signal)
-7. [Accuracy, performance, and differentiation](#7-accuracy-performance-and-differentiation)
+1. [Prepare the simulation](#1-prepare-the-simulation)
+2. [Initialize the simulation state](#2-initialize-the-simulation-state)
+3. [Evaluate the sequence and fields](#3-evaluate-the-sequence-and-fields)
+4. [Evolve the magnetization](#4-evolve-the-magnetization)
+5. [Evaluate magnetization at ADC samples](#5-evaluate-magnetization-at-adc-samples)
+6. [Form the net receive signal](#6-form-the-net-receive-signal)
+7. [Control accuracy and performance](#7-control-accuracy-and-performance)
+8. [Run the simulation](#8-run-the-simulation)
 
-## 1. Build simulation data
+## 1. Prepare the simulation
 
 The high-level interface converts the phantom into compact `SimData` and the
 sequence into MRzeroCore events:
@@ -29,7 +30,7 @@ relaxation times, diffusion, B0/B1 maps, receive sensitivities, voxel shape,
 and dephasing information. Voxels below the proton-density threshold are
 discarded before execution.
 
-## 2. Construct the phase graph
+### Construct the phase graph
 
 `compute_graph()` performs a prepass through the sequence. It determines which
 longitudinal and transverse phase-distribution states can be created by RF and
@@ -52,7 +53,7 @@ Signal estimates from the prepass allow states with negligible latent or
 emitted signal to be pruned. This prevents the number of coherence pathways
 from growing without bound.
 
-## 3. Initialize magnetization
+## 2. Initialize the simulation state
 
 The default graph begins with a fully relaxed longitudinal state:
 
@@ -66,7 +67,7 @@ Proton density is applied during receive-signal formation. A custom complex
 initial-magnetization tensor can replace the relaxed state for steady-state or
 specialized experiments.
 
-## 4. Apply RF and free-evolution operators
+## 3. Evaluate the sequence and fields
 
 ### RF mixing
 
@@ -136,7 +137,28 @@ E_1Z_0(t)+\left(1-E_1\right).
 MRzeroCore also applies T2-prime dephasing, voxel-shape dephasing, diffusion
 attenuation, and motion phase using their corresponding analytical factors.
 
-## 5. Evaluate voxel magnetization
+## 4. Evolve the magnetization
+
+For every retained graph node, MRzeroCore gathers its simulated ancestors,
+applies the RF mixing coefficients, and then propagates the resulting state
+through the event trajectory. The event-level update can be summarized as
+
+```math
+\mathbf s_{n+1}
+=
+\mathcal D_n
+\mathcal P_n
+\mathcal R_n
+\mathbf s_n
++\mathbf b_n,
+```
+
+where the RF operator mixes states, the phase operator applies gradient,
+off-resonance, and motion phase, the decay operator applies relaxation and
+diffusion, and the recovery term restores longitudinal equilibrium. These are
+analytical tensor operations rather than adaptive ODE steps.
+
+## 5. Evaluate magnetization at ADC samples
 
 For a transverse PDG state `q` at ADC time `t_a`, the voxelwise transverse
 magnetization has the general form
@@ -164,7 +186,7 @@ Here, `A` is the RF-mixed state amplitude, `D` is diffusion attenuation, and
 tracks off-resonance dephasing, while the spatial coordinates track gradient
 encoding.
 
-## 6. Form the net signal
+## 6. Form the net receive signal
 
 For every ADC sample and receive coil, MRzeroCore sums all emitted transverse
 states and all signal-producing voxels:
@@ -195,7 +217,7 @@ State contributions are added to obtain the final complex signal tensor. The
 ADC phase is applied uniformly to the receive channels, and the corresponding
 k-space coordinates are returned with the signal.
 
-## 7. Accuracy, performance, and differentiation
+## 7. Control accuracy and performance
 
 The principal accuracy controls are the minimum latent-signal and
 emitted-signal thresholds used to retain and measure PDG states. Smaller
@@ -207,6 +229,14 @@ or supported GPU paths. Because event operators and signal formation are tensor
 operations, automatic differentiation can propagate a loss through supported
 sequence, phantom, and reconstruction parameters.
 
+## 8. Run the simulation
+
+The high-level interface prepares the graph, executes it, and returns the
+signal and trajectory:
+
+```python
+signal, kspace = mr0.util.simulate(sequence, phantom)
+```
+
 Previous: [MRzeroCore Inputs](MRzero-Inputs). See also:
 [JEMRIS vs. MRzeroCore](JEMRIS-vs.-MRzeroCore).
-
