@@ -1,0 +1,28 @@
+# The 6.4800's magnet: an Aubert pair of two printed holders (mri25MagHolder.stl), each with 100 bar magnets in two
+# rings of 50, facing each other on the z axis (B0 along z), RF coil and gradient coils between them.
+#
+#   [stl]    slot geometry, measured from mri25MagHolder.stl: inner ring r 40.9-51.7 mm x 3.2 mm wide, outer ring
+#            r 61.8-71.8 mm x 5.8 mm wide, 50 slots each (the outer ring offset half a slot), slot layer 8 mm thick
+#   [photo]  bars run axially out through each holder's outer face (reference photos IMG_0945-0950): ~30 mm long
+#   [fit]    magnetization: radially in in one holder and out in the other. Of axial, radial and mixed layouts this
+#            is the only one that reaches ~100 mT in this geometry
+#   [fit]    74 mm between the holders' slot layers: where the field is flattest (the cam spacers,
+#            mri25Cam*.stl at 3.28-4.22 mm, look like the way the gap is trimmed)
+#   [guess]  polarity: which holder points in isn't knowable from the CAD; this way round B0 points along +z,
+#            the design's convention (the other way mirrors images, as reversing a real magnet would)
+#   [fit]    br_t 1.38 T (N48-N50 grade): gives 107.3 mT at the centre, the field the RF is tuned to
+#
+# design/maps/b0_aubert.npz is this design's map, precomputed (python tools/make_b0_map.py): default.yaml uses that
+# file because generating it takes ~30 s. Layer this file instead to regenerate after changing a dimension.
+fields:
+  b0_direction: z
+  b0:
+    file: null
+    match_larmor: false
+    rings:
+      # holder at z = -37 mm (bars run toward -z), magnetized radially inward
+      - {count: 50, inner_radius_mm: 40.9, outer_radius_mm: 51.7, width_mm: 3.2, thickness_mm: 30, axis: z, centre_mm: {z: -48}, br_t: 1.38, magnetization: radial_in}
+      - {count: 50, inner_radius_mm: 61.8, outer_radius_mm: 71.8, width_mm: 5.8, thickness_mm: 30, axis: z, centre_mm: {z: -48}, br_t: 1.38, magnetization: radial_in, phase_deg: 3.6}
+      # holder at z = +37 mm (bars run toward +z), magnetized radially outward
+      - {count: 50, inner_radius_mm: 40.9, outer_radius_mm: 51.7, width_mm: 3.2, thickness_mm: 30, axis: z, centre_mm: {z: 48}, br_t: 1.38, magnetization: radial_out}
+      - {count: 50, inner_radius_mm: 61.8, outer_radius_mm: 71.8, width_mm: 5.8, thickness_mm: 30, axis: z, centre_mm: {z: 48}, br_t: 1.38, magnetization: radial_out, phase_deg: 3.6}

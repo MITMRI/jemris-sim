@@ -159,7 +159,9 @@ def generated_rings(axes, rings, name="b0", n_r=6, n_ax=6, n_phi=96):
     Halbach-free ring magnet, any stack of rings. Valid away from the magnet material (in the bore).
 
     Each ring: {inner_radius_mm, outer_radius_mm, thickness_mm, axis, centre_mm: {x, y, z}, br_t (remanence),
-    magnetization: axial | -axial | radial_out | radial_in}.
+    magnetization: axial | -axial | radial_out | radial_in}. With `count` and `width_mm` the ring is that many
+    discrete bar magnets (boxes radial r1..r2, width_mm across, thickness_mm along the axis, magnetized as a whole;
+    `phase_deg` turns the set), like the bars in the 6.4800's magnet holders.
     An Aubert pair: two coaxial rings, one magnetized radially outward and one inward, which gives a field along
     the axis at the centre; their spacing sets the homogeneity.
     """
@@ -173,15 +175,30 @@ def generated_rings(axes, rings, name="b0", n_r=6, n_ax=6, n_phi=96):
         t = ring["thickness_mm"] * 1e-3
         c = ring.get("centre_mm", {}) or {}
         centre = np.array([c.get(a, 0) for a in AXES]) * 1e-3
-        dr, dz, dphi = (r2 - r1) / n_r, t / n_ax, 2 * np.pi / n_phi
-        R, H, PHI = np.meshgrid(r1 + (np.arange(n_r) + 0.5) * dr, -t / 2 + (np.arange(n_ax) + 0.5) * dz,
-                                (np.arange(n_phi) + 0.5) * dphi, indexing="ij")
-        R, H, PHI = R.ravel(), H.ravel(), PHI.ravel()
-        src = np.tile(centre, (len(R), 1))
-        src[:, ai] += H
-        src[:, u] += R * np.cos(PHI)
-        src[:, v] += R * np.sin(PHI)
-        moment = ring["br_t"] / MU0 * R * dr * dz * dphi          # A m^2 per element (M = Br / mu0)
+        if ring.get("count"):        # discrete bar magnets: `count` boxes, radial r1..r2, `width_mm` wide
+            w = ring["width_mm"] * 1e-3
+            n_w = 3
+            dr, dz, dw = (r2 - r1) / n_r, t / n_ax, w / n_w
+            RR, HH, WW, PHI = np.meshgrid(r1 + (np.arange(n_r) + 0.5) * dr, -t / 2 + (np.arange(n_ax) + 0.5) * dz,
+                                          -w / 2 + (np.arange(n_w) + 0.5) * dw,
+                                          2 * np.pi * np.arange(ring["count"]) / ring["count"]
+                                          + np.radians(ring.get("phase_deg", 0)), indexing="ij")
+            RR, H, WW, PHI = RR.ravel(), HH.ravel(), WW.ravel(), PHI.ravel()
+            src = np.tile(centre, (len(RR), 1))
+            src[:, ai] += H
+            src[:, u] += RR * np.cos(PHI) - WW * np.sin(PHI)
+            src[:, v] += RR * np.sin(PHI) + WW * np.cos(PHI)
+            moment = np.full(len(RR), ring["br_t"] / MU0 * dr * dz * dw)
+        else:
+            dr, dz, dphi = (r2 - r1) / n_r, t / n_ax, 2 * np.pi / n_phi
+            R, H, PHI = np.meshgrid(r1 + (np.arange(n_r) + 0.5) * dr, -t / 2 + (np.arange(n_ax) + 0.5) * dz,
+                                    (np.arange(n_phi) + 0.5) * dphi, indexing="ij")
+            R, H, PHI = R.ravel(), H.ravel(), PHI.ravel()
+            src = np.tile(centre, (len(R), 1))
+            src[:, ai] += H
+            src[:, u] += R * np.cos(PHI)
+            src[:, v] += R * np.sin(PHI)
+            moment = ring["br_t"] / MU0 * R * dr * dz * dphi      # A m^2 per element (M = Br / mu0)
         m = np.zeros_like(src)
         kind = ring["magnetization"]
         if kind in ("axial", "-axial"):

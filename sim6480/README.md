@@ -9,7 +9,7 @@ higher peak echo voltage means the spins are better aligned, as in Irene's thesi
 ```bash
 pip install -r requirements.txt
 python -m sim6480 run --plot shot.png                       # one shot of the default design
-python -m sim6480 run design/examples/aubert_b0.yaml        # the same shot in an Aubert-pair magnet
+python -m sim6480 run design/examples/maxwell_gz.yaml       # the same shot with a coil-pair z gradient
 python -m sim6480 run --set gradients.axis=y --set phantom.liquid=pure_water
 python -m sim6480 numbers                                   # scaling: B0, M0, EMF per mm^3, noise, gain
 python -m sim6480 export-maps maps/                         # the maps a shot uses, as files you can edit
@@ -19,7 +19,7 @@ python -m pytest tests -q
 
 ![one simulated shot](docs/shot_z.png)
 
-*Default design, readout along z, three-slice phantom. Top: coil voltage, with RF pulses in red and the readout
+*Default design (Aubert-pair magnet), readout along z, three-slice phantom. Top: coil voltage, with RF pulses in red and the readout
 gradient in green. Middle: ch2 counts as captured. Bottom: the image the lab's processing makes, against the
 phantom.*
 
@@ -53,7 +53,7 @@ distribution graph* (PDG) simulator:
 
 | input | form | default |
 |---|---|---|
-| B0 map | vector field (T) on a grid, `.npz`/`.h5` | uniform 107.3 mT (4.567 MHz) + 20 Hz/mm along z; or permanent-magnet rings (`rings:`, e.g. an **Aubert pair**) |
+| B0 map | vector field (T) on a grid, `.npz`/`.h5` | the 6.4800's **Aubert-pair magnet** (`design/maps/b0_aubert.npz`): 107.3 mT along z, −2.3 to +3.6 kHz across the phantom |
 | gx, gy, gz maps | vector field (T) per unit of drive | linear, 3000 Hz/mm per drive; or coils by their dimensions (`loops:`, e.g. a **Maxwell / anti-Helmholtz pair**) |
 | RF coil map | vector field (T per amp) | 20-turn solenoid on the 19 mm coil form, axis x |
 | sequence | the firmware's timings, or a `.seq` | firmware spin echo, 128 × 1024 samples at 50 MS/s |
@@ -64,15 +64,15 @@ distribution graph* (PDG) simulator:
 
 | output | value for the default design |
 |---|---|
-| coil voltage vs time | complex baseband, V; peak echo **8.4 µV** |
+| coil voltage vs time | complex baseband, V; peak echo **8.3 µV**; the FID decays in ~0.3 ms (magnet T2*) |
 | noise at the coil | 3.2 µV rms in the 10 MHz bandwidth |
-| ADC counts | about ±35 counts of echo on ch2 (8.4 µV × 54 dB ÷ 0.12 mV per count); RF pulses saturate |
+| ADC counts | about ±35 counts of echo on ch2 (8.3 µV × 54 dB ÷ 0.12 mV per count); RF pulses saturate |
 | FPGA bytes | exactly what the laptop receives (6480-signal-processing's packing) |
 | 1-D image | along the readout axis, 0.52 mm pixels: three slices for z, one block for y |
 
 **Scale check.** Water at 107 mT and 22 °C has M0 = 3.5×10⁻⁴ A/m. With the coil's 1.05 mT/A, reciprocity gives
 10.6 nV per mm³ of water tipped 90°. For the phantom's 853 mm³ that is about 9 µV. The full simulation gives
-8.4 µV, a little less because of T2′ and the coil's falloff (`python -m sim6480 numbers`).
+8.3 µV, a little less because of T2′ and the coil's falloff (`python -m sim6480 numbers`).
 
 ## Field maps: the only way hardware enters
 
@@ -100,13 +100,35 @@ paths are read from `design/`.
 | coil (receive) | sensitivity | \|B1⊥(r)\| in T/A; volts by reciprocity, V = ω·(B1/I)·M0·V_voxel |
 
 **Built-in generators.** Each is checked against a closed form in `tests/`:
-- **Permanent-magnet rings, `generated_rings`:** axial or radial magnetization (dipole sum over the ring volume).
-  The Aubert pair, a radial-out ring plus a radial-in ring, is in `design/examples/aubert_b0.yaml`.
-  `match_larmor: true` scales the map so its centre sits at `magnet.larmor_hz`.
+- **Permanent-magnet rings and bar magnets, `generated_rings`:** axial or radial magnetization (dipole sum over
+  the magnet volume); `count` + `width_mm` make a ring of discrete bars. `match_larmor: true` scales the map so its
+  centre sits at `magnet.larmor_hz`.
 - **Current loops, `generated_loops`:** coil pairs and solenoids, via Biot–Savart with elliptic integrals.
   `design/examples/maxwell_gz.yaml` is an anti-Helmholtz z-gradient pair.
 
-> The ring and coil dimensions in both examples are **placeholders**. Put the real ones in.
+> The coil dimensions in `maxwell_gz.yaml` are **placeholders**: the gradient coils aren't in the CAD.
+
+## The magnet
+
+The 6.4800's magnet is an **Aubert pair**: two printed holders (`mri25MagHolder.stl`) facing each other on the z
+axis, with the RF and gradient coils between them (reference photos in the 6.4800 design files).
+`design/examples/aubert_6480.yaml` describes it, and `tools/make_b0_map.py` turns that into
+`design/maps/b0_aubert.npz`, the default B0.
+
+| what | value | from |
+|---|---|---|
+| magnets per holder | 100 bars, in two rings of 50 | CAD |
+| inner ring | radius 40.9–51.7 mm, 3.2 mm wide | CAD |
+| outer ring | radius 61.8–71.8 mm, 5.8 mm wide, offset half a slot | CAD |
+| bar length (along z) | ~30 mm, through the holder and out of its outer face | photos |
+| magnetization | radially in in one holder, out in the other | fit: of axial, radial and mixed layouts, only this reaches ~100 mT |
+| gap between the holders' slot layers | 74 mm, where the field is flattest | fit (the `mri25Cam*` spacers, 3.28–4.22 mm, look like how the gap is trimmed) |
+| grade | Br 1.38 T (N48–N50) | fit: gives 107.3 mT |
+| polarity | B0 along +z | convention: reversing the magnet mirrors images, as it would on the bench |
+
+**Result:** about 5 kHz (1000 ppm) of B0 variation across the 10 mm phantom. The FID now dies in ~0.3 ms (T2*),
+while the spin echo still refocuses. A gaussmeter map of the bore, or a field-mapping scan, would replace the
+fitted values: save it in the map format and point `fields.b0.file` at it.
 
 ## Changing the design
 
@@ -150,8 +172,10 @@ design/default.yaml (+ your layers)
   - Gradients are made linear (each map's centre slope); `export.json` reports the worst position error.
   - Coils are uniform.
   - Reading JEMRIS's signal back (`load_signal`) hasn't been run against a real cluster output yet.
-- **Not measured yet** (the [guess] values): gradient strength per drive, coil turns and resistance, the
-  preamp gain, noise density, ADC full scale, T2′. The magnet and gradient-coil dimensions for the ring and
-  loop generators are also missing.
+- **Not measured yet** (the [guess] and [fit] values):
+  - the magnet's bar length, grade, gap and polarity (fitted, not measured)
+  - gradient-coil geometry: not in the CAD, so gradients are linear at a guessed 3000 Hz/mm per drive
+  - RF coil resistance; coil turns are taken as 20 from the simulation team notes
+  - preamp gain, noise density, ADC full scale, T2′
 - **Orientation.** With `gradients.sign: -1` (the firmware's default) the image matches the phantom's
   orientation. Flipping the sign mirrors it, as it would on the bench.

@@ -24,13 +24,14 @@ magnet:
 fields:
   b0_direction: z               # direction of B0 for generated maps, and for scalar maps read from files
   b0:                           # static field
-    file: null                  # a map file (.npz/.h5, see sim6480/fieldmaps.py), or null to generate:
+    file: maps/b0_aubert.npz    # [stl+fit] the 6.4800's Aubert-pair magnet, from design/examples/aubert_6480.yaml
+                                #   (CAD slot geometry; bar length, magnetization, gap and grade fitted to 107 mT).
+                                #   About 5 kHz of B0 variation across the 10 mm phantom. null to generate instead:
+    match_larmor: true          # scale the map so its centre is at magnet.larmor_hz (as tuning the RF does)
     offset_hz: 0                #   uniform field at magnet.larmor_hz + offset
-    linear_hz_per_mm: {x: 0, y: 0, z: 20}         # [guess] plus a gradient,
+    linear_hz_per_mm: {x: 0, y: 0, z: 0}          #   plus a gradient,
     quadratic_hz_per_mm2: {x: 0, y: 0, z: 0}      #   and curvature, as frequency offsets
-    # Or the magnet by its dimensions (permanent-magnet rings, e.g. an Aubert pair); see design/examples/aubert_b0.yaml
-    # rings: [...]
-    # match_larmor: true        # scale the generated map so its centre is at magnet.larmor_hz
+    # Or the magnet by its dimensions (permanent-magnet rings / bar magnets): see design/examples/aubert_6480.yaml
   gx:                           # gradient channel fields, per unit of drive (the sequence sets the drive)
     file: null
     hz_per_mm_per_drive: 3000   # [guess] generated map: linear, this strong at drive 1

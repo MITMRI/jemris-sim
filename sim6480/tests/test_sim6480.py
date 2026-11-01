@@ -75,6 +75,19 @@ def test_aubert_pair_field_is_axial():
     assert abs(b[2]) > 0.1 and np.hypot(b[0], b[1]) < 1e-6 * abs(b[2])
 
 
+def test_6480_magnet_map():
+    """The shipped Aubert-pair map: ~107 mT along +z at the centre, and matches its design file."""
+    m = fieldmaps.load_map(PACKAGE_ROOT / "design" / "maps" / "b0_aubert.npz")
+    b = m.sample(np.zeros((1, 3)))[:, 0]
+    assert b[2] == pytest.approx(physics.b0_tesla(4.567e6), rel=0.01)
+    assert np.hypot(b[0], b[1]) < 1e-6 * b[2]
+    d = load_design([PACKAGE_ROOT / "design" / "default.yaml", EXAMPLES / "aubert_6480.yaml"])
+    p = np.array([[3.0, -2.0, 4.0]])
+    gen = fieldmaps.generated_rings((np.array([2., 3, 4]), np.array([-3., -2, -1]), np.array([3., 4, 5])),
+                                    d["fields"]["b0"]["rings"])
+    np.testing.assert_allclose(gen.sample(p), m.sample(p), rtol=2e-3)
+
+
 def test_map_file_round_trip(tmp_path):
     axes = fieldmaps.grid_axes(3, 1.0)
     m = fieldmaps.generated_gradient(axes, "y", 2500, "z")
