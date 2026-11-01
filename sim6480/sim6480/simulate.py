@@ -56,7 +56,44 @@ def map_extent(phantom, step_mm):
     return max(np.abs(np.concatenate(phantom.axes_mm)).max(), 1.0) + 2 * step_mm
 
 
+@dataclass
+class SequenceShot:
+    """Any Pulseq sequence through the field maps: the coil voltage only (no firmware, receive chain or processing)."""
+    design: dict
+    plan: object
+    phantom: object
+    fields: object
+    coil_v: np.ndarray         # complex baseband coil voltage at plan.adc_times_s (V)
+    seconds: float
+
+    @property
+    def t_s(self):
+        return self.plan.adc_times_s
+
+    @property
+    def peak_coil_uv(self):
+        return float(np.abs(self.coil_v).max() * 1e6)
+
+
+def simulate_sequence(design, seq, maps=None, phantom=None):
+    """Coil voltage for a Pulseq sequence (pypulseq.Sequence or .seq path); see sequence.plan_from_seq for units.
+    maps and phantom can be passed in to reuse them across many sequences."""
+    start = time.time()
+    ph = phantom or phantom_mod.build(design)
+    step = design["simulation"]["field_map_step_mm"]
+    maps = maps or fieldmaps.build_maps(design, map_extent(ph, step), step, PACKAGE_ROOT / "design")
+    plan = sequence.plan_from_seq(seq, design["magnet"]["larmor_hz"] + design["rf"]["frequency_offset_hz"])
+    fields = fieldmaps.voxel_fields(maps, ph.points_mm, plan.f_rf_hz)
+    data = phantom_mod.to_mrzero(ph, fields, design["simulation"]["voxel_shape"])
+    coil_v, _ = kernel_mrzero.run(plan, ph, data, design)
+    return SequenceShot(design, plan, ph, fields, coil_v, time.time() - start)
+
+
 def simulate(design, rng=None):
+    """One shot of the firmware's spin echo, end to end (design["sequence"]["file"]: use simulate_sequence)."""
+    if design["sequence"]["file"]:
+        raise ValueError("sequence.file is set: a custom sequence gives coil voltage only, via simulate_sequence "
+                         "(`python -m sim6480 run` does this)")
     start = time.time()
     ph = phantom_mod.build(design)
     maps = fieldmaps.build_maps(design, map_extent(ph, design["simulation"]["field_map_step_mm"]), design["simulation"]["field_map_step_mm"], PACKAGE_ROOT / "design")

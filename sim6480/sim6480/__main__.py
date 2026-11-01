@@ -73,6 +73,15 @@ def main(argv=None):
         from sim6480.physics import summary
         for k, v in summary(design).items():
             print(f"{k:32s} {v:.4g}")
+    elif args.cmd == "run" and design["sequence"]["file"]:
+        from sim6480.simulate import simulate_sequence
+        f = Path(design["sequence"]["file"])
+        shot = simulate_sequence(design, f if f.is_absolute() else PACKAGE_ROOT / "design" / f)
+        print(f"simulated {f} in {shot.seconds:.1f} s: {len(shot.t_s)} ADC samples, "
+              f"peak coil voltage {shot.peak_coil_uv:.2f} µV")
+        if args.save:
+            np.savez(args.save, adc_times_s=shot.t_s, coil_v=shot.coil_v)
+            print(f"wrote {args.save}")
     elif args.cmd == "run":
         from sim6480.simulate import simulate
         shot = simulate(design)

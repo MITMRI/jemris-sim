@@ -15,6 +15,7 @@ python -m sim6480 numbers                                   # scaling: B0, M0, E
 python -m sim6480 export-maps maps/                         # the maps a shot uses, as files you can edit
 python -m sim6480 jemris out/                               # the same shot as JEMRIS input, for the cluster
 python tools/sweep_gap.py --shots                           # magnet holder spacing vs field spread and echo
+python demo/demo.py                                         # maps + Pulseq sequences in, coil voltage out (~20 s)
 python -m pytest tests -q
 ```
 
@@ -24,7 +25,28 @@ python -m pytest tests -q
 gradient in green. Middle: ch2 counts as captured. Bottom: the image the lab's processing makes, against the
 phantom.*
 
-## What it does (Kevin's questions)
+## Demo: maps and sequences in, voltage out
+
+`demo/demo.py` runs the whole idea end to end:
+1. It writes every field map to a plain `.npz` file (`demo/out/maps/`). From then on the simulator sees only
+   those files.
+2. It writes the pulse sequences as standard Pulseq files (`demo/out/seqs/`).
+3. It reads out the coil voltage for each pair.
+
+![demo](docs/demo.png)
+
+| strategy | what changes | result |
+|---|---|---|
+| a. RF pulse length sweep | the sequence only | peak FID voltage 8.54 µV at 32 µs, the true 90° (33 µs). Past 90° the voltage falls: the peak voltage is the alignment score |
+| b. the same spin echo on three magnets | the B0 map only | the FID fades in 0.25 ms (fitted magnet), 0.16 ms (holders 2 mm further apart), > 0.5 ms (ideal). The echo comes back on all three: 8.41, 8.02, 8.41 µV |
+| c. readout with two gradient coils | the gz map only | a linear map and a Maxwell pair give nearly the same image. With an ideal B0 the slots come out much sharper, so on this scanner the magnet limits the image, not the gradient coil |
+
+To try your own: build a sequence with pypulseq (or write a `.seq`) and call
+`simulate_sequence(design, seq)` in `sim6480/simulate.py`, or use `python -m sim6480 run --set sequence.file=my.seq`.
+**Gradient units:** a gradient of 1e6 Hz/m in the sequence means drive 1 of that axis's gradient map. The map
+decides what that is in real Hz/mm.
+
+## What it does
 
 **What is it imaging?** The real 3D-printed phantoms. Their STL files, from
 [6480-pulse-sequence](https://github.com/MITMRI/6480-pulse-sequence), are voxelized at 0.5 mm where they sit in
@@ -37,7 +59,8 @@ default is the three-slice phantom: three 2 mm slots, 4 mm apart, 10 mm deep, 85
   1.58 ms.
 - **Format:** written as a standard Pulseq `.seq` file. MRzero reads that file directly, and JEMRIS reads it after
   `tools/seq_to_jemris_xml.py` converts it.
-- **Your own sequence:** design key `sequence.file`.
+- **Your own sequence:** any Pulseq sequence, via `simulate_sequence` or the design key `sequence.file`. This
+  gives the coil voltage; the receive chain and lab processing assume the firmware's timing.
 
 **What is the kernel?** [MRzero](https://github.com/MRsources/MRzero-Core) (MRzeroCore 1.3), a *phase
 distribution graph* (PDG) simulator:
@@ -191,7 +214,8 @@ design/default.yaml (+ your layers)
 ## Known limits
 
 - **One shot, 1-D images.** The firmware's spin echo with a single readout gradient. Any Pulseq sequence can be
-  given instead with `sequence.file`; phase encoding for 2-D works in principle but hasn't been tried here.
+  given instead (`simulate_sequence`, coil voltage only); phase encoding for 2-D works in principle but hasn't
+  been tried here.
 - **B0 direction.** MRzero assumes one common B0 direction. The maps' local direction sets each voxel's
   frequency and gradient component, but a field that rotates a lot across the sample is beyond the PDG model.
   JEMRIS handles that better.

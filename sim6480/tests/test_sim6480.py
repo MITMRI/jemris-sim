@@ -159,3 +159,11 @@ def test_jemris_bundle(tmp_path, shot_z):
     with h5py.File(tmp_path / "sample.h5") as h:
         assert h["/sample/data"].shape == (nz, ny, nx, 5)
     assert info["adc_samples"] == len(shot_z.plan.adc_times_s)
+
+
+def test_any_pulseq_sequence(shot_z):
+    """The firmware sequence, run through the generic Pulseq path, gives the same coil voltage."""
+    from sim6480.simulate import simulate_sequence
+    s = simulate_sequence(shot_z.design, shot_z.plan.seq, maps=shot_z.maps, phantom=shot_z.phantom)
+    np.testing.assert_allclose(s.t_s, shot_z.plan.adc_times_s, atol=1e-9)
+    np.testing.assert_allclose(s.coil_v, shot_z.coil_v, rtol=1e-4, atol=1e-4 * np.abs(shot_z.coil_v).max())

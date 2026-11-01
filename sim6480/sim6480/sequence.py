@@ -114,3 +114,27 @@ def build(design, firmware=None, hz_per_m_per_drive=None):
     return SequencePlan(seq, f_rf, np.asarray(adc_times), rf_windows, fw_seq.spin_echo_us * 1e-6,
                         fw_seq.gradient_echo_us * 1e-6, capture_us * 1e-6, phases,
                         (e["sro"] * 1e-6, e["srw"] * 1e-6))
+
+
+def plan_from_seq(seq, f_rf_hz):
+    """A SequencePlan for any Pulseq sequence (a pypulseq.Sequence, or the path of a .seq file).
+
+    Gradient amplitudes are read as drive x ENCODING_HZ_PER_M: a lobe of 1e6 Hz/m in the file is drive 1 of that
+    channel's field map. ADC samples before the first RF pulse are left out, as MRzero leaves them out.
+    """
+    if not isinstance(seq, pp.Sequence):
+        path, seq = str(seq), pp.Sequence()
+        seq.read(path)
+    t, adc_times, rf_windows, phases = 0.0, [], [], []
+    for i in seq.block_events:
+        b = seq.get_block(i)
+        if b.rf is not None:
+            rf_windows.append((t + b.rf.delay, t + b.rf.delay + b.rf.shape_dur))
+            phases.append(math.degrees(b.rf.phase_offset))
+        if b.adc is not None and rf_windows:
+            adc_times.extend(t + b.adc.delay + (np.arange(b.adc.num_samples) + 0.5) * b.adc.dwell)
+        t += seq.block_durations[i]
+    if not rf_windows:
+        raise ValueError("the sequence has no RF pulse")
+    return SequencePlan(seq, f_rf_hz, np.asarray(adc_times), rf_windows, float("nan"), float("nan"), t, phases,
+                        (rf_windows[0][1], t))
