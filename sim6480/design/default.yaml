@@ -1,0 +1,116 @@
+# The 6.4800 tabletop MRI as a simulation design. Every number here can be changed: edit this file, layer a file
+# from design/examples/ on top (`python -m sim6480 run design/examples/maxwell_gz.yaml`), or set one value from the
+# command line (`--set fields.gz.hz_per_mm_per_drive=4000`).
+#
+# The hardware enters only as FIELD MAPS (fields: below): the static field B0, the field each gradient channel makes
+# per unit of drive, and the RF coil's field per amp. Give a measured or modelled map as a file, or let one be
+# generated from the few numbers here. Nothing else about the magnet, gradient coils or RF coil is used.
+#
+# Where each default comes from:
+#   [firmware]  the Teensy firmware, via MITMRI/6480-pulse-sequence (pulseseq)
+#   [fpga]      MITMRI/fpga_6480_driver
+#   [afe]       the AFE5808 settings the firmware programs, and the Electrical (Reverse Engineering) notes
+#   [stl]       the 3D-printed parts (phantoms, RF coil form)
+#   [schematic] the main board, newMRI_26_08A (KiCad): AFE5808A receiver; gradients from a DAC7564 (Teensy SPI)
+#               into OPA548 power amplifiers (+-15 V) through series power resistors, current sensed on 0.05 ohm
+#               shunts by AD8274s (the GRADA/B/C monitor signals)
+#   [guess]     not measured yet: change it once it is
+
+magnet:
+  larmor_hz: 4.567e6            # [firmware] RF frequency of pulsecmd453.h: the field the RF is tuned to (107.3 mT)
+  temperature_c: 22             # sample temperature: sets the equilibrium magnetization
+  t2dash_s: 0.002               # [guess] reversible dephasing inside each voxel (field roughness below the grid)
+
+fields:
+  b0_direction: z               # direction of B0 for generated maps, and for scalar maps read from files
+  b0:                           # static field
+    file: null                  # a map file (.npz/.h5, see sim6480/fieldmaps.py), or null to generate:
+    offset_hz: 0                #   uniform field at magnet.larmor_hz + offset
+    linear_hz_per_mm: {x: 0, y: 0, z: 20}         # [guess] plus a gradient,
+    quadratic_hz_per_mm2: {x: 0, y: 0, z: 0}      #   and curvature, as frequency offsets
+    # Or the magnet by its dimensions (permanent-magnet rings, e.g. an Aubert pair); see design/examples/aubert_b0.yaml
+    # rings: [...]
+    # match_larmor: true        # scale the generated map so its centre is at magnet.larmor_hz
+  gx:                           # gradient channel fields, per unit of drive (the sequence sets the drive)
+    file: null
+    hz_per_mm_per_drive: 3000   # [guess] generated map: linear, this strong at drive 1
+  gy:
+    file: null
+    hz_per_mm_per_drive: 3000   # [guess] until calibrated with the three-slice phantom
+  gz:
+    file: null
+    hz_per_mm_per_drive: 3000   # [guess]
+    # Or the real coil by its dimensions, e.g. an anti-Helmholtz (Maxwell) pair; see design/examples/maxwell_gz.yaml:
+    # loops:
+    #   - {radius_mm: 15, axis: z, centre_mm: {z: 13}, turns: 20, sign: +1}
+    #   - {radius_mm: 15, axis: z, centre_mm: {z: -13}, turns: 20, sign: -1}
+    # amps_per_drive: 1.0       # gradient driver current at drive 1
+  coil:                         # RF coil field per amp (T/A): transmit pattern and receive sensitivity
+    file: null
+    solenoid:                   # generated map (Biot-Savart): an N-turn solenoid centred on the sample
+      turns: 20                 # [guess] count them on the coil
+      radius_mm: 9.5            # [stl] winding groove of mri25RfCoilForm.stl: 19 mm across
+      length_mm: 14.5           # [stl] the groove runs ~16 to ~30.5 mm up the form
+      axis: x                   # along the phantom's axis (the coil form's axis), perpendicular to B0
+    resistance_ohm: 0.5         # [guess] for the coil's thermal noise
+
+rf:
+  frequency_offset_hz: 0        # transmit/demodulation frequency minus magnet.larmor_hz
+  flip90_deg: 90                # flip angle at the coil's centre from the "90°" pulse (set by the RF knob) [guess]
+  flip180_deg: 180              # and from the "180°" pulse (twice as long, same amplitude) [guess]
+  phase_from_timing: true       # the Teensy's RF is a free-running square wave, so each pulse's phase is
+                                # 360° x frequency x start time; false = 0° for the 90°, 90° for the 180°
+
+gradients:                      # the sequence's gradient drive
+  axis: z                       # [firmware] readout channel of this shot: x, y or z (the firmware alternates z, y)
+  drive: 1.0                    # [firmware] drive level during the lobes, in the gradient maps' units. [schematic]
+                                # the drive is a DAC7564 code -> OPA548 current; with a coil-pair map (loops:),
+                                # amps_per_drive is that current, readable on the GRAD monitor shunts
+  sign: -1                      # [firmware] -1 = dephase -, readout +, rewind - (the knob's "negative" side)
+
+receive:                        # [afe] from coil voltage to ADC counts, on the coil's channel ([schematic] AFE5808A:
+                                # LNA 12/18/24 dB, PGA 24/30 dB, 14-bit ADC; the settings below match)
+  channel: ch2                  # [fpga] the one RF coil is wired to ch2; ch1 is empty
+  noise_nv_per_rthz: 1.0        # [guess] coil + AFE input noise density
+  preamp_db: 0                  # [guess] the two PH23 amplifiers on the RFB path: gain not known yet
+  lna_db: 24                    # [afe] firmware register 0x34
+  pga_db: 30                    # [afe] firmware register 0x33
+  lpf_mhz: 10                   # [afe] firmware register 0x33
+  digital_db: 0                 # [afe] register 0x3B looks like it enables -24 dB of digital attenuation; check
+  adc_vpp: 2.0                  # [guess] ADC full-scale range
+  adc_bits: 14                  # [fpga]
+  fs_hz: 50.0e6                 # [firmware] the Teensy clocks the ADC at 50 MHz
+  rf_leak_counts: 6500          # RF pulses saturate the receiver: shown as clipped bursts this many counts high
+
+sequence:
+  file: null                    # a Pulseq .seq to simulate instead of the firmware's spin echo (advanced)
+  capture_blocks: 128           # [fpga] N in the capture command: N x 1024 samples (2.62 ms)
+  write_ns: null                # [firmware] time per Teensy GPIO write; null = the firmware's 3.333 ns
+  out_rate_hz: 100.0e3          # processing: downconverted sample rate (one sample every 10 µs)
+  echo_row_samples: 64          # processing: samples cut around the echo
+
+phantom:
+  stl: mri25threeSlice.stl      # [stl] mri25_10x10x10.stl, mri25threeSlice.stl or threeSlit.stl
+  liquid: doped_water           # one of `liquids` below
+  rotation_deg: 0               # about the phantom's own axis; 0: the slots' narrow side along the readout axis
+  axis: x                       # scanner axis the phantom's cylinder axis points along
+  centre_mm: {x: 0, y: 0, z: 0} # where the phantom sits (moves it through the field maps)
+  voxel_mm: 0.5                 # simulation grid spacing
+
+liquids:                        # T1, T2 at about 0.1 T [guess]: measure them
+  doped_water: {pd: 1.0, t1_s: 0.20, t2_s: 0.15}   # water with ~1-2 g/L copper sulfate
+  pure_water: {pd: 1.0, t1_s: 2.5, t2_s: 1.5}
+  mineral_oil: {pd: 0.9, t1_s: 0.15, t2_s: 0.08}
+
+simulation:
+  kernel: mrzero                # mrzero runs here; `python -m sim6480 jemris` writes the same experiment for JEMRIS
+  adc_dwell_us: 1.0             # baseband sampling inside the simulator (resampled to 50 MS/s afterwards)
+  voxel_shape: sinc             # MRzero's voxel model: sinc (smooth), box, or point (best for very nonlinear maps)
+  max_states: 200               # MRzero phase-graph size
+  min_state_mag: 1.0e-4
+  field_map_step_mm: 0.5        # grid spacing of generated field maps
+  seed: 0
+
+repos:                          # sibling checkouts this uses (relative to this design folder)
+  pulse_sequence: ../../../6480-pulse-sequence
+  signal_processing: ../../../6480-signal-processing
