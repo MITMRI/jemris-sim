@@ -14,6 +14,7 @@ python -m sim6480 run --set gradients.axis=y --set phantom.liquid=pure_water
 python -m sim6480 numbers                                   # scaling: B0, M0, EMF per mm^3, noise, gain
 python -m sim6480 export-maps maps/                         # the maps a shot uses, as files you can edit
 python -m sim6480 jemris out/                               # the same shot as JEMRIS input, for the cluster
+python tools/sweep_gap.py --shots                           # magnet holder spacing vs field spread and echo
 python -m pytest tests -q
 ```
 
@@ -126,9 +127,35 @@ axis, with the RF and gradient coils between them (reference photos in the 6.480
 | grade | Br 1.38 T (N48–N50) | fit: gives 107.3 mT |
 | polarity | B0 along +z | convention: reversing the magnet mirrors images, as it would on the bench |
 
+This matches what the 6.4800 staff described: ~100 mT from 200 magnets in two 3D-printed hub-and-spoke holders,
+with an adjustable separation that sets the z inhomogeneity. Patrick McDaniel's work is the reference they gave for
+B-field variation and magnet layout.
+
 **Result:** about 5 kHz (1000 ppm) of B0 variation across the 10 mm phantom. The FID now dies in ~0.3 ms (T2*),
 while the spin echo still refocuses. A gaussmeter map of the bore, or a field-mapping scan, would replace the
 fitted values: save it in the map format and point `fields.b0.file` at it.
+
+## Testing a strategy: the holder spacing
+
+The holder spacing is the magnet's tuning knob. `tools/sweep_gap.py` moves both holders symmetrically, retunes
+the RF to each new centre field, and runs a shot each time (numbers below: three-slice phantom, no noise):
+
+| spacing (mm) | B0 (mT) | spread over the water | peak echo (µV) |
+|---|---|---|---|
+| 88 (−8) | 116.9 | 42.7 kHz (8600 ppm) | 8.11 |
+| 92 (−4) | 112.1 | 20.7 kHz | 8.51 |
+| 94 (−2) | 109.6 | 11.2 kHz | 8.53 |
+| **96 (fitted)** | **107.2** | **5.9 kHz (1300 ppm)** | 8.33 |
+| 98 (+2) | 104.7 | 6.8 kHz | 7.92 |
+| 100 (+4) | 102.3 | 12.6 kHz | 7.40 |
+| 104 (+8) | 97.4 | 24.6 kHz | 6.31 |
+
+Two things to read from it:
+- **The spacing is touchy.** 2 mm either way roughly doubles the field spread. The flattest spacing gives about
+  6 kHz, which is already a fifth of the 30 kHz imaging bandwidth, so B0 variation shows up as image distortion.
+- **The peak echo isn't only an alignment score.** A spin echo refocuses static B0 variation, and the signal grows
+  as B0² (magnetization × frequency). So a closer, stronger, *less* uniform magnet can give a slightly bigger
+  echo. To score homogeneity, use the spread column, the FID's decay (T2*), or the image's sharpness.
 
 ## Changing the design
 
@@ -174,8 +201,11 @@ design/default.yaml (+ your layers)
   - Reading JEMRIS's signal back (`load_signal`) hasn't been run against a real cluster output yet.
 - **Not measured yet** (the [guess] and [fit] values):
   - the magnet's bar length, grade, gap and polarity (fitted, not measured)
-  - gradient-coil geometry: not in the CAD, so gradients are linear at a guessed 3000 Hz/mm per drive
+  - gradient-coil geometry: not in the CAD. The gradients are linear at 3000 Hz/mm, from the staff's 30 kHz
+    imaging bandwidth across the 10 mm phantom; their coils are opposed pairs, linear in y and z, up to 2 A
   - RF coil resistance; coil turns are taken as 20 from the simulation team notes
-  - preamp gain, noise density, ADC full scale, T2′
+  - preamp gain, noise density, T2′ (the ADC's 2 Vpp full scale is fixed by the AFE5808A)
+  - whether the firmware's register 0x3B setting (0x3B00C4) turns on 24 dB of attenuation: its own comments say
+    it does. `receive.digital_db` is 0 until a capture's noise floor shows which
 - **Orientation.** With `gradients.sign: -1` (the firmware's default) the image matches the phantom's
   orientation. Flipping the sign mirrors it, as it would on the bench.

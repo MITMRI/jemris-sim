@@ -14,6 +14,9 @@
 #   [schematic] the main board, newMRI_26_08A (KiCad): AFE5808A receiver; gradients from a DAC7564 (Teensy SPI)
 #               into OPA548 power amplifiers (+-15 V) through series power resistors, current sensed on 0.05 ohm
 #               shunts by AD8274s (the GRADA/B/C monitor signals)
+#   [meeting]   the 6.4800 staff (Elfar, Jacob) in the MRI-team meeting: ~100 mT from 200 magnets in two 3D-printed
+#               hub-and-spoke holders with adjustable separation; gradients from two opposed coils, linear in y and z,
+#               bidirectional, up to 2 A; 30 kHz imaging bandwidth; ~10 ADC samples per 4.6 MHz period
 #   [guess]     not measured yet: change it once it is
 
 magnet:
@@ -34,18 +37,20 @@ fields:
     # Or the magnet by its dimensions (permanent-magnet rings / bar magnets): see design/examples/aubert_6480.yaml
   gx:                           # gradient channel fields, per unit of drive (the sequence sets the drive)
     file: null
-    hz_per_mm_per_drive: 3000   # [guess] generated map: linear, this strong at drive 1
+    hz_per_mm_per_drive: 3000   # [guess] generated map: linear, this strong at drive 1. Not driven by the firmware's
+                                #   spin echo ([meeting]: the coils are linear in y and z)
   gy:
     file: null
-    hz_per_mm_per_drive: 3000   # [guess] until calibrated with the three-slice phantom
+    hz_per_mm_per_drive: 3000   # [meeting] 30 kHz imaging bandwidth across the 10 mm phantom = 3 kHz/mm; calibrate
+                                #   with the three-slice phantom
   gz:
     file: null
-    hz_per_mm_per_drive: 3000   # [guess]
+    hz_per_mm_per_drive: 3000   # [meeting] as gy
     # Or the real coil by its dimensions, e.g. an anti-Helmholtz (Maxwell) pair; see design/examples/maxwell_gz.yaml:
     # loops:
     #   - {radius_mm: 15, axis: z, centre_mm: {z: 13}, turns: 20, sign: +1}
     #   - {radius_mm: 15, axis: z, centre_mm: {z: -13}, turns: 20, sign: -1}
-    # amps_per_drive: 1.0       # gradient driver current at drive 1
+    # amps_per_drive: 1.0       # gradient driver current at drive 1 ([meeting] up to 2 A)
   coil:                         # RF coil field per amp (T/A): transmit pattern and receive sensitivity
     file: null
     solenoid:                   # generated map (Biot-Savart): an N-turn solenoid centred on the sample
@@ -77,8 +82,11 @@ receive:                        # [afe] from coil voltage to ADC counts, on the 
   lna_db: 24                    # [afe] firmware register 0x34
   pga_db: 30                    # [afe] firmware register 0x33
   lpf_mhz: 10                   # [afe] firmware register 0x33
-  digital_db: 0                 # [afe] register 0x3B looks like it enables -24 dB of digital attenuation; check
-  adc_vpp: 2.0                  # [guess] ADC full-scale range
+  digital_db: 0                 # [afe] check: the firmware writes 0x3B00C4, which by its own comments enables
+                                #   -24 dB of attenuation (bit 7 on, bits 6-4 = 100). If so, set -24: the echo drops
+                                #   to ~2 counts. A capture's noise floor in counts tells which
+  adc_vpp: 2.0                  # [afe] ADC full-scale range: fixed by the AFE5808A (2 Vpp differential, datasheet);
+                                #   no register sets it, so the firmware doesn't either
   adc_bits: 14                  # [fpga]
   fs_hz: 50.0e6                 # [firmware] the Teensy clocks the ADC at 50 MHz
   rf_leak_counts: 6500          # RF pulses saturate the receiver: shown as clipped bursts this many counts high
