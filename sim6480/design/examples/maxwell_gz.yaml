@@ -1,0 +1,12 @@
+# gz from a real coil pair instead of an ideal linear gradient: an anti-Helmholtz (Maxwell) pair on the z axis.
+# Opposite currents in two loops give dBz/dz at the centre, most uniform when the separation is sqrt(3) x radius.
+# The dimensions are placeholders: put in the measured radius, separation, turns and driver current.
+#   python -m sim6480 run design/examples/maxwell_gz.yaml
+fields:
+  gz:
+    loops:
+      - {radius_mm: 15, axis: z, centre_mm: {z: 13}, turns: 20, sign: 1}     # separation 26 mm ~ sqrt(3) x 15
+      - {radius_mm: 15, axis: z, centre_mm: {z: -13}, turns: 20, sign: -1}
+    amps_per_drive: 1.0
+gradients:
+  axis: z

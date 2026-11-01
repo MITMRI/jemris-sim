@@ -1,0 +1,11 @@
+# sim6480 (Python >= 3.10). Also needs the sibling repos 6480-pulse-sequence and 6480-signal-processing checked out
+# next to jemris-sim (paths in design/default.yaml, repos:).
+MRzeroCore==1.3.0
+pypulseq==1.5.0.post1
+torch>=2.2
+numpy>=1.26
+scipy>=1.11
+h5py>=3.10
+PyYAML>=6.0
+matplotlib>=3.8
+pytest>=8

@@ -283,6 +283,22 @@ $$
 For hydrogen, $\gamma/(2\pi)$ is approximately
 $42.57747892\times10^6\ \mathrm{Hz/T}$.
 
+## Other simulators
+
+Other tools that could fill the same role, and how they fit the 6.4800 need (field maps + sequence in, coil
+voltage out):
+
+| simulator | kernel | inputs | fit |
+|---|---|---|---|
+| [KomaMRI.jl](https://github.com/JuliaHealth/KomaMRI.jl) (Julia, GPU) | Bloch, per spin, in time | Pulseq `.seq`; phantom with T1, T2, off-resonance and motion per spin | fast, and reads the same `.seq`; gradients are linear, so nonlinear gradient maps need the same position trick sim6480 uses |
+| [MRiLab](https://github.com/leoliuf/MRiLab) (MATLAB + C++/CUDA) | Bloch, discrete spins | its own sequence format and GUI; B0 and B1 maps | good for teaching; less scriptable, and no Pulseq |
+| POSSUM (FSL) | Bloch, per voxel | brain phantoms, B0 maps, motion | built for EPI and fMRI artefacts in the brain, not tabletop hardware |
+| Bloch simulators for pulse design (e.g. Hargreaves' MATLAB `bloch`) | rotation matrices, a few spins | RF and gradient waveforms | for checking flip angles and RF pulses, not whole images |
+| Extended phase graph (EPG) codes | phase states, no space | flip angles and timings | for echo amplitudes and contrast only; MRzero's PDG is the spatial version |
+
+None of them model an arbitrary vector B0 or gradient map directly. JEMRIS comes closest, and sim6480 gets around
+the limit in MRzero by encoding each voxel at its field-map position.
+
 ## References
 
 - [This repository's JEMRIS simulation and Pulseq workflow](README.md)
