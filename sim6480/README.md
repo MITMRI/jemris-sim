@@ -98,6 +98,49 @@ distribution graph* (PDG) simulator:
 10.6 nV per mm³ of water tipped 90°. For the phantom's 853 mm³ that is about 9 µV. The full simulation gives
 8.3 µV, a little less because of T2′ and the coil's falloff (`python -m sim6480 numbers`).
 
+## Built on MRzero and JEMRIS
+
+sim6480 doesn't write its own Bloch solver. It uses two open-source simulators and adds what they need to stand in
+for the 6.4800.
+
+**What each one provides, unchanged:**
+
+| | [MRzero](https://github.com/MRsources/MRzero-Core) (MRzeroCore 1.3) | [JEMRIS](https://www.jemris.org) (this repository) |
+|---|---|---|
+| role here | the kernel every shot runs on | an optional high-fidelity check, run on the cluster |
+| method | phase distribution graphs: states per RF pulse, relaxation and phase between pulses | Bloch equations integrated per spin (CVODE) |
+| speed | ~2 s per shot on a laptop | minutes to hours |
+| takes | a Pulseq `.seq` and a voxel phantom (PD, T1, T2, T2′, off-resonance in Hz, B1, coil sensitivity) | XML sequence, `sample.h5` phantom, coil XML |
+| gives | the signal in arbitrary units | the signal in arbitrary units |
+
+Neither knows about the 6.4800's magnet, coils, firmware, receiver or processing. Both expect linear gradients
+and give unitless signal.
+
+**What sim6480 adds:**
+
+- **Field maps as the only hardware input.** Any vector B0, gradient and RF-coil map, from a file or generated,
+  becomes what the kernel takes for each voxel: off-resonance from |B0|, a flip-angle map and receive sensitivity
+  from the coil's field across B0.
+- **Nonlinear gradients in MRzero.** MRzero only does linear gradients, so each voxel is placed at its *encoding*
+  coordinate, γ̄·B_grad,∥(r) / 10⁶ Hz/m, instead of its true position. A nonlinear gradient map then distorts the
+  image the way the real coil would, with no change to MRzero.
+- **Volts at the coil.** The unitless signal becomes volts by reciprocity, using the water's Curie-law
+  magnetization at the design's B0 and the coil map's field per amp. The scale check above confirms it.
+- **The 6.4800's own sequence.** The spin echo's timing is read from the Teensy firmware (its GPIO writes) and
+  written as Pulseq. The RF phase follows the free-running square wave. ADC samples before the first RF pulse
+  are skipped, because MRzero drops them.
+- **The rest of the signal chain.** RF at the Larmor frequency, coil noise, AFE5808A gains, receiver saturation
+  during RF, the 14-bit ADC and the FPGA's byte packing, then the lab's own processing code for the 1-D image.
+- **The real parts.** Phantoms voxelized from their STL files. The magnet is modelled from the holder CAD as an
+  Aubert pair (a dipole sum over 200 bar magnets). Coils come from Biot–Savart current loops. Each generator is
+  checked against a closed form in `tests/`.
+- **One design for both kernels.** `python -m sim6480 jemris` writes the same shot as JEMRIS input: the B0 map
+  as JEMRIS's off-resonance, the sequence through this repository's Pulseq-to-XML converter
+  (`tools/seq_to_jemris_xml.py`), and an `export.json` with the volts scale and what JEMRIS gets only
+  approximately (linear gradients, uniform coils).
+- **A strategy loop.** Design files, single-value overrides, any Pulseq sequence (`simulate_sequence`), the
+  holder-spacing sweep and the demo, all scored by coil voltage.
+
 ## Field maps: the only way hardware enters
 
 The simulator never sees "a magnet" or "a gradient coil". It sees what they produce:
