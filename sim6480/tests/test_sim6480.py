@@ -75,17 +75,54 @@ def test_aubert_pair_field_is_axial():
     assert abs(b[2]) > 0.1 and np.hypot(b[0], b[1]) < 1e-6 * abs(b[2])
 
 
-def test_6480_magnet_map():
-    """The shipped Aubert-pair map: ~107 mT along +z at the centre, and matches its design file."""
-    m = fieldmaps.load_map(PACKAGE_ROOT / "design" / "maps" / "b0_aubert.npz")
+@pytest.mark.parametrize("map_name, example", [("b0_spokes.npz", "spokes_6480.yaml"),
+                                                ("b0_aubert.npz", "aubert_6480.yaml")])
+def test_6480_magnet_map(map_name, example):
+    """The shipped magnet maps: within 1.5 % of the firmware's 4.567 MHz along +z at the centre (default.yaml's
+    match_larmor takes up the rest), and each matches its design file."""
+    m = fieldmaps.load_map(PACKAGE_ROOT / "design" / "maps" / map_name)
     b = m.sample(np.zeros((1, 3)))[:, 0]
-    assert b[2] == pytest.approx(physics.b0_tesla(4.567e6), rel=0.01)
+    assert b[2] == pytest.approx(physics.b0_tesla(4.567e6), rel=0.015)
     assert np.hypot(b[0], b[1]) < 1e-6 * b[2]
-    d = load_design([PACKAGE_ROOT / "design" / "default.yaml", EXAMPLES / "aubert_6480.yaml"])
+    d = load_design([PACKAGE_ROOT / "design" / "default.yaml", EXAMPLES / example])
     p = np.array([[3.0, -2.0, 4.0]])
     gen = fieldmaps.generated_rings((np.array([2., 3, 4]), np.array([-3., -2, -1]), np.array([3., 4, 5])),
                                     d["fields"]["b0"]["rings"])
     np.testing.assert_allclose(gen.sample(p), m.sample(p), rtol=2e-3)
+
+
+def _white_spokes(points_mm, n, half_width_in, half_height_in, r_in_in, length_in, z_in):
+    """Jacob White's equivalent-charge model of a spokes-and-hub magnet (magnetSimulator v4, testRings.m, square
+    rods), field in tesla: charge on each spoke's two end faces, 6 x 6 Gauss points, his calibrated weights."""
+    x, wx = np.polynomial.legendre.leggauss(6)
+    u, v = (a.ravel() for a in np.meshgrid(x, x, indexing="ij"))
+    wq = np.outer(wx, wx).ravel()
+    src, w = [], []
+    for s in (1, -1):                                   # the -z ring's magnets are flipped
+        for th in np.arange(n) * 2 * np.pi / n:
+            rad, side = np.array([np.cos(th), np.sin(th), 0]), np.array([-np.sin(th), np.cos(th), 0])
+            for r, sign in ((r_in_in, 1), (r_in_in + length_in, -1)):
+                face = rad * r + [0, 0, s * z_in]
+                src.append(face + np.outer(u * half_width_in, side) + np.outer(v * half_height_in, [0, 0, 1]))
+                w.append(s * sign * 2 * half_width_in * half_height_in * wq)
+    src, w = np.concatenate(src), np.concatenate(w) * 1.09 * (15.9 / -0.03537) / 10       # mT
+    d = points_mm[:, None, :] / 25.4 - src[None]
+    return np.einsum("n,pnc->pc", w, d / np.linalg.norm(d, axis=-1, keepdims=True) ** 3) * 1e-3
+
+
+def test_spokes_match_white_model():
+    """The dipole sum (generated_rings) against Jacob White's own equivalent-charge model, on his 105 mT and 163 mT
+    designs: centre field within 1 %, field over the phantom region within 3 % of its spread."""
+    pts = np.array([[0, 0, 0], [5, 0, 0], [0, 5, 0], [0, 0, 5], [3, -3, 4]], float)
+    for n, hw, hh, r_in, length, z in [(50, 1 / 16, 1 / 4, 31 / 25.4, 2, 31 / 25.4 + 1 / 4),
+                                       (50, 1 / 16, 1 / 2, 33 / 25.4, 1.5, 56.1 / 2 / 25.4 + 1 / 2)]:
+        ref = np.linalg.norm(_white_spokes(pts, n, hw, hh, r_in, length, z), axis=1)
+        rings = [dict(count=n, inner_radius_mm=r_in * 25.4, outer_radius_mm=(r_in + length) * 25.4,
+                      width_mm=2 * hw * 25.4, thickness_mm=2 * hh * 25.4, axis="z", centre_mm={"z": s * z * 25.4},
+                      br_t=1.232, magnetization=m) for s, m in ((1, "radial_out"), (-1, "radial_in"))]
+        ours = np.linalg.norm(fieldmaps.generated_rings(fieldmaps.grid_axes(6, 1.0), rings).sample(pts), axis=0)
+        assert ours[0] == pytest.approx(ref[0], rel=0.01)
+        np.testing.assert_allclose(ours / ours[0] - 1, ref / ref[0] - 1, atol=0.03 * np.ptp(ref / ref[0]) + 2e-5)
 
 
 def test_map_file_round_trip(tmp_path):
@@ -131,14 +168,17 @@ def test_echo_voltage_scale(shot_z):
 
 
 def test_three_slices_where_they_are(shot_z):
-    """Three separate regions above half height, spanning the phantom's water to within an image pixel."""
+    """Three separate regions above half height, spanning the phantom's water to within an image pixel plus the
+    shift the magnet's B0 variation causes at each end (off-resonance / readout gradient)."""
     pos, img = shot_z.process.positions_mm, np.abs(shot_z.process.image)
     above = img > 0.5 * img.max()
     assert np.count_nonzero(np.diff(above.astype(int)) == 1) == 3
     tx, tw = shot_z.phantom.profile("z")
     th = tx[tw > tw.max() / 2]
-    assert pos[above].min() == pytest.approx(th.min(), abs=0.6)
-    assert pos[above].max() == pytest.approx(th.max(), abs=0.6)
+    z, df = shot_z.phantom.points_mm[:, 2], shot_z.fields.off_resonance_hz
+    for edge, found in ((th.min(), pos[above].min()), (th.max(), pos[above].max())):
+        shift = abs(df[np.abs(z - edge) < 1].mean()) / shot_z.hz_per_mm
+        assert found == pytest.approx(edge, abs=0.6 + shift)
 
 
 def test_image_moves_with_the_phantom():

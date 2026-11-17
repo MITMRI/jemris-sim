@@ -1,0 +1,28 @@
+# The 6.4800's magnet as Jacob White designed it: his spokes-and-hub magnet simulator (jacobwhite_magnetSimulator_v4,
+# 2023-07-31, testRings.m; Kuang, Arango, Stockmann, Adalsteinsson, White, ISMRM 2019), the "105 mT magnet" entry.
+#
+#   [white]  per holder, 50 spokes in one ring, each two 1" x 1/2" x 1/8" bars end to end: 2" (50.8 mm) long
+#            radially, 1/2" (12.7 mm) tall along z, 1/8" (3.175 mm) wide. 200 bars in all, as the staff said
+#   [white]  spokes run from r = 31 mm to 81.8 mm; 31 mm from the centre plane to each ring's inner face (a 62 mm
+#            gap between the rings), so spoke centres at z = +-37.35 mm
+#   [sweep]  that gap is also the flattest spacing: 10.5 kHz across the phantom (tools/sweep_gap.py); 1 mm either
+#            way adds 2-3 kHz
+#   [white]  magnetized along each spoke (radially), inward on one holder and outward on the other
+#   [white]  grade: his field weights, calibrated against a measured magnet, equal Br 1.23 T here (about N38)
+#   [guess]  polarity: chosen so B0 points along +z, the design's convention
+#
+# His equivalent-charge model gives 108.7 mT (4.630 MHz) for this; generated_rings uses the same method and gives
+# 108.6 mT (tests/test_sim6480.py checks the two agree). The firmware's RF is 4.567 MHz, 1.2 % lower: default.yaml's
+# match_larmor scales the map to it. That is about what 10 C of magnet warming does to NdFeB (-0.12 %/C), or the
+# spread between magnet grades; moving the holders 0.9 mm apart would also do it, but makes the field less flat.
+#
+# design/maps/b0_spokes.npz is this design's map, precomputed (python tools/make_b0_map.py): default.yaml uses that
+# file because generating it takes ~30 s. Layer this file instead to regenerate after changing a dimension.
+fields:
+  b0_direction: z
+  b0:
+    file: null
+    match_larmor: false
+    rings:
+      - {count: 50, inner_radius_mm: 31.0, outer_radius_mm: 81.8, width_mm: 3.175, thickness_mm: 12.7, axis: z, centre_mm: {z: -37.35}, br_t: 1.23, magnetization: radial_in}
+      - {count: 50, inner_radius_mm: 31.0, outer_radius_mm: 81.8, width_mm: 3.175, thickness_mm: 12.7, axis: z, centre_mm: {z: 37.35}, br_t: 1.23, magnetization: radial_out}

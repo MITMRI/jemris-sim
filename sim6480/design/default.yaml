@@ -27,14 +27,15 @@ magnet:
 fields:
   b0_direction: z               # direction of B0 for generated maps, and for scalar maps read from files
   b0:                           # static field
-    file: maps/b0_aubert.npz    # [stl+fit] the 6.4800's Aubert-pair magnet, from design/examples/aubert_6480.yaml
-                                #   (CAD slot geometry; bar length, magnetization, gap and grade fitted to 107 mT).
-                                #   About 5 kHz of B0 variation across the 10 mm phantom. null to generate instead:
+    file: maps/b0_spokes.npz    # [white] the 6.4800's spokes-and-hub magnet, from design/examples/spokes_6480.yaml
+                                #   (Jacob White's magnet simulator: 2 x 50 radial spokes of 1"x1/2"x1/8" bars).
+                                #   About 10.5 kHz of B0 variation across the 10 mm phantom. The older CAD-and-fit
+                                #   model is maps/b0_aubert.npz (design/examples/aubert_6480.yaml). null to generate:
     match_larmor: true          # scale the map so its centre is at magnet.larmor_hz (as tuning the RF does)
     offset_hz: 0                #   uniform field at magnet.larmor_hz + offset
     linear_hz_per_mm: {x: 0, y: 0, z: 0}          #   plus a gradient,
     quadratic_hz_per_mm2: {x: 0, y: 0, z: 0}      #   and curvature, as frequency offsets
-    # Or the magnet by its dimensions (permanent-magnet rings / bar magnets): see design/examples/aubert_6480.yaml
+    # Or the magnet by its dimensions (permanent-magnet rings / bar magnets): see design/examples/spokes_6480.yaml
   gx:                           # gradient channel fields, per unit of drive (the sequence sets the drive)
     file: null
     hz_per_mm_per_drive: 3000   # [guess] generated map: linear, this strong at drive 1. Not driven by the firmware's

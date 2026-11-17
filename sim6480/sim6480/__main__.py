@@ -6,7 +6,7 @@
     python -m sim6480 export-maps OUT_DIR [design.yaml ...]          the four field maps, as files fields.*.file reads
 
 Design files layer on top of design/default.yaml, then --set overrides apply, e.g.
-    python -m sim6480 run design/examples/aubert_b0.yaml --set gradients.axis=y --set phantom.liquid=pure_water
+    python -m sim6480 run design/examples/spokes_6480.yaml --set gradients.axis=y --set phantom.liquid=pure_water
 """
 
 import argparse

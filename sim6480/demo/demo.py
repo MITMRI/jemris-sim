@@ -49,7 +49,7 @@ def write_maps():
         fieldmaps.save_map(paths[k], m)
 
     coarse = fieldmaps.grid_axes(map_extent(ph, 1.0), 1.0)      # the generated magnets: 1 mm grid is plenty
-    rings = load_design([DEFAULT_DESIGN, EXAMPLES / "aubert_6480.yaml"])["fields"]["b0"]["rings"]
+    rings = load_design([DEFAULT_DESIGN, EXAMPLES / "spokes_6480.yaml"])["fields"]["b0"]["rings"]
     wider = [{**r, "centre_mm": {"z": r["centre_mm"]["z"] + np.sign(r["centre_mm"]["z"])}} for r in rings]
     extra = {
         "b0_holders_2mm_apart": fieldmaps.generated_rings(coarse, wider),

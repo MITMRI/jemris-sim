@@ -160,7 +160,8 @@ def generated_rings(axes, rings, name="b0", n_r=6, n_ax=6, n_phi=96):
 
     Each ring: {inner_radius_mm, outer_radius_mm, thickness_mm, axis, centre_mm: {x, y, z}, br_t (remanence),
     magnetization: axial | -axial | radial_out | radial_in}. With `count` and `width_mm` the ring is that many
-    discrete bar magnets (boxes radial r1..r2, width_mm across, thickness_mm along the axis, magnetized as a whole;
+    discrete bar magnets (boxes radial r1..r2, width_mm across, thickness_mm along the axis, magnetized as a whole,
+    their field from the magnetic charge on their faces, as in Jacob White's spokes-and-hub simulator;
     `phase_deg` turns the set), like the bars in the 6.4800's magnet holders.
     An Aubert pair: two coaxial rings, one magnetized radially outward and one inward, which gives a field along
     the axis at the centre; their spacing sets the homogeneity.
@@ -176,19 +177,8 @@ def generated_rings(axes, rings, name="b0", n_r=6, n_ax=6, n_phi=96):
         c = ring.get("centre_mm", {}) or {}
         centre = np.array([c.get(a, 0) for a in AXES]) * 1e-3
         if ring.get("count"):        # discrete bar magnets: `count` boxes, radial r1..r2, `width_mm` wide
-            w = ring["width_mm"] * 1e-3
-            n_w = 3
-            dr, dz, dw = (r2 - r1) / n_r, t / n_ax, w / n_w
-            RR, HH, WW, PHI = np.meshgrid(r1 + (np.arange(n_r) + 0.5) * dr, -t / 2 + (np.arange(n_ax) + 0.5) * dz,
-                                          -w / 2 + (np.arange(n_w) + 0.5) * dw,
-                                          2 * np.pi * np.arange(ring["count"]) / ring["count"]
-                                          + np.radians(ring.get("phase_deg", 0)), indexing="ij")
-            RR, H, WW, PHI = RR.ravel(), HH.ravel(), WW.ravel(), PHI.ravel()
-            src = np.tile(centre, (len(RR), 1))
-            src[:, ai] += H
-            src[:, u] += RR * np.cos(PHI) - WW * np.sin(PHI)
-            src[:, v] += RR * np.sin(PHI) + WW * np.cos(PHI)
-            moment = np.full(len(RR), ring["br_t"] / MU0 * dr * dz * dw)
+            B += _bar_ring_field(pts, ring, ai, u, v, centre, r1, r2, t)
+            continue
         else:
             dr, dz, dphi = (r2 - r1) / n_r, t / n_ax, 2 * np.pi / n_phi
             R, H, PHI = np.meshgrid(r1 + (np.arange(n_r) + 0.5) * dr, -t / 2 + (np.arange(n_ax) + 0.5) * dz,
@@ -215,6 +205,56 @@ def generated_rings(axes, rings, name="b0", n_r=6, n_ax=6, n_phi=96):
             B[k:k + 4096] += MU0 / (4 * np.pi) * np.einsum(
                 "pnc->pc", 3 * d * (mr / r**5)[..., None] - m[None] / (r**3)[..., None])
     return FieldMap(*axes, B.T.reshape((3,) + X.shape), name)
+
+
+def _bar_ring_field(pts, ring, ai, u, v, centre, r1, r2, t):
+    """Field (T, (n, 3)) of a ring of uniformly magnetized bars, from the magnetic charge on the two faces each
+    bar's magnetization crosses (sigma = +-Br/mu0), integrated with Gauss-Legendre points: the method of Jacob
+    White's spokes-and-hub simulator (Kuang et al., ISMRM 2019). Exact for uniform bars, unlike a coarse dipole sum,
+    so it gets the ppm-level shape of the field right."""
+    w = ring["width_mm"] * 1e-3
+    kind = ring["magnetization"]
+    phis = 2 * np.pi * np.arange(ring["count"]) / ring["count"] + np.radians(ring.get("phase_deg", 0))
+    order = lambda size: int(np.clip(np.ceil(size / 3e-3), 6, 24))     # Gauss points per side: ~1 per 3 mm, >= 6
+    if kind in ("radial_out", "radial_in"):     # charge on the faces at r1 (south when outward) and r2
+        sgn = 1 if kind == "radial_out" else -1
+        faces = [(r2, sgn), (r1, -sgn)]
+        a, b = order(w), order(t)
+        xa, wa = np.polynomial.legendre.leggauss(a)
+        xb, wb = np.polynomial.legendre.leggauss(b)
+        S, H = (g.ravel() for g in np.meshgrid(xa * w / 2, xb * t / 2, indexing="ij"))
+        area_w = np.outer(wa * w / 2, wb * t / 2).ravel()
+        R = lambda r: np.full(len(S), r)
+    elif kind in ("axial", "-axial"):           # charge on the faces at +-t/2
+        sgn = 1 if kind == "axial" else -1
+        faces = [(t / 2, sgn), (-t / 2, -sgn)]
+        a, b = order(r2 - r1), order(w)
+        xa, wa = np.polynomial.legendre.leggauss(a)
+        xb, wb = np.polynomial.legendre.leggauss(b)
+        RR, S = (g.ravel() for g in np.meshgrid(r1 + (xa + 1) * (r2 - r1) / 2, xb * w / 2, indexing="ij"))
+        area_w = np.outer(wa * (r2 - r1) / 2, wb * w / 2).ravel()
+    else:
+        raise ValueError(f"unknown magnetization {kind!r}")
+    src, q = [], []
+    for phi in phis:
+        c, s = np.cos(phi), np.sin(phi)
+        for pos, sign in faces:
+            p = np.tile(centre, (len(S), 1))
+            if kind.startswith("radial"):
+                rr, hh = R(pos), H
+            else:
+                rr, hh = RR, np.full(len(S), pos)
+            p[:, ai] += hh
+            p[:, u] += rr * c - S * s
+            p[:, v] += rr * s + S * c
+            src.append(p)
+            q.append(sign * area_w)
+    src, q = np.concatenate(src), np.concatenate(q) * ring["br_t"] / (4 * np.pi)     # B = mu0 H = Br/4pi sum q r/r^3
+    B = np.zeros_like(pts)
+    for k in range(0, len(pts), 2048):
+        d = pts[k:k + 2048, None, :] - src[None]
+        B[k:k + 2048] = np.einsum("n,pnc->pc", q, d / np.linalg.norm(d, axis=-1, keepdims=True) ** 3)
+    return B
 
 
 def solenoid_loops(turns, radius_mm, length_mm, axis="x", centre_mm=None):

@@ -3,7 +3,7 @@ field over the phantom and, with --shots, to the echo.
 
     python tools/sweep_gap.py                        # field only: a few seconds per spacing
     python tools/sweep_gap.py --shots                # also one simulated shot per spacing (the echo peak)
-    python tools/sweep_gap.py --deltas -4 -2 0 2 4   # spacing changes from the fitted design, mm
+    python tools/sweep_gap.py --deltas -4 -2 0 2 4   # spacing changes from the design, mm
 
 Each spacing moves the two holders symmetrically along z by delta/2. The RF is retuned to the magnet's new centre
 field for each shot (magnet.larmor_hz), as the lab does with the RF knob.
@@ -25,14 +25,16 @@ from sim6480.physics import GAMMA_BAR                                  # noqa: E
 from sim6480.simulate import map_extent                                # noqa: E402
 
 ap = argparse.ArgumentParser()
+ap.add_argument("--design", type=Path, default=ROOT / "design" / "examples" / "spokes_6480.yaml",
+                help="the magnet design to move")
 ap.add_argument("--deltas", type=float, nargs="+", default=[-6, -4, -2, 0, 2, 4, 6],
-                help="change in holder spacing from aubert_6480.yaml, mm")
+                help="change in holder spacing from the design, mm")
 ap.add_argument("--step", type=float, default=1.0, help="field-map grid step, mm")
 ap.add_argument("--shots", action="store_true", help="also simulate one shot per spacing")
 ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="design overrides for the shots")
 args = ap.parse_args()
 
-base = load_design([DEFAULT_DESIGN, ROOT / "design" / "examples" / "aubert_6480.yaml"], args.set)
+base = load_design([DEFAULT_DESIGN, args.design], args.set)
 rings = base["fields"]["b0"]["rings"]
 ph = phantom_mod.build(base)
 pts = ph.points_mm

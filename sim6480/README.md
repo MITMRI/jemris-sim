@@ -21,7 +21,7 @@ python -m pytest tests -q
 
 ![one simulated shot](docs/shot_z.png)
 
-*Default design (Aubert-pair magnet), readout along z, three-slice phantom. Top: coil voltage, with RF pulses in red and the readout
+*Default design (Jacob White's spokes-and-hub magnet), readout along z, three-slice phantom. Top: coil voltage, with RF pulses in red and the readout
 gradient in green. Middle: ch2 counts as captured. Bottom: the image the lab's processing makes, against the
 phantom.*
 
@@ -37,8 +37,8 @@ phantom.*
 
 | strategy | what changes | result |
 |---|---|---|
-| a. RF pulse length sweep | the sequence only | peak FID voltage 8.54 µV at 32 µs, the true 90° (33 µs). Past 90° the voltage falls: the peak voltage is the alignment score |
-| b. the same spin echo on three magnets | the B0 map only | the FID fades in 0.25 ms (fitted magnet), 0.16 ms (holders 2 mm further apart), > 0.5 ms (ideal). The echo comes back on all three: 8.41, 8.02, 8.41 µV |
+| a. RF pulse length sweep | the sequence only | peak FID voltage 8.46 µV at 32 µs, the true 90° (33 µs). Past 90° the voltage falls: the peak voltage is the alignment score |
+| b. the same spin echo on three magnets | the B0 map only | the FID fades in 0.14 ms (White's magnet), 0.06 ms (holders 2 mm further apart), > 0.5 ms (ideal). The echo comes back on all three: 8.41, 8.17, 8.41 µV |
 | c. readout with two gradient coils | the gz map only | a linear map and a Maxwell pair give nearly the same image. With an ideal B0 the slots come out much sharper, so on this scanner the magnet limits the image, not the gradient coil |
 
 To try your own: build a sequence with pypulseq (or write a `.seq`) and call
@@ -77,7 +77,7 @@ distribution graph* (PDG) simulator:
 
 | input | form | default |
 |---|---|---|
-| B0 map | vector field (T) on a grid, `.npz`/`.h5` | the 6.4800's **Aubert-pair magnet** (`design/maps/b0_aubert.npz`): 107.3 mT along z, −2.3 to +3.6 kHz across the phantom |
+| B0 map | vector field (T) on a grid, `.npz`/`.h5` | the 6.4800's **spokes-and-hub magnet**, Jacob White's design (`design/maps/b0_spokes.npz`): 108.6 mT along z, scaled to the RF's 107.3 mT; −3.2 to +7.2 kHz across the phantom |
 | gx, gy, gz maps | vector field (T) per unit of drive | linear, 3000 Hz/mm per drive; or coils by their dimensions (`loops:`, e.g. a **Maxwell / anti-Helmholtz pair**) |
 | RF coil map | vector field (T per amp) | 20-turn solenoid on the 19 mm coil form, axis x |
 | sequence | the firmware's timings, or a `.seq` | firmware spin echo, 128 × 1024 samples at 50 MS/s |
@@ -88,7 +88,7 @@ distribution graph* (PDG) simulator:
 
 | output | value for the default design |
 |---|---|
-| coil voltage vs time | complex baseband, V; peak echo **8.3 µV**; the FID decays in ~0.3 ms (magnet T2*) |
+| coil voltage vs time | complex baseband, V; peak echo **8.3 µV**; the FID decays in ~0.14 ms (magnet T2*) |
 | noise at the coil | 3.2 µV rms in the 10 MHz bandwidth |
 | ADC counts | about ±35 counts of echo on ch2 (8.3 µV × 54 dB ÷ 0.12 mV per count); RF pulses saturate |
 | FPGA bytes | exactly what the laptop receives (6480-signal-processing's packing) |
@@ -131,8 +131,8 @@ and give unitless signal.
   are skipped, because MRzero drops them.
 - **The rest of the signal chain.** RF at the Larmor frequency, coil noise, AFE5808A gains, receiver saturation
   during RF, the 14-bit ADC and the FPGA's byte packing, then the lab's own processing code for the 1-D image.
-- **The real parts.** Phantoms voxelized from their STL files. The magnet is modelled from the holder CAD as an
-  Aubert pair (a dipole sum over 200 bar magnets). Coils come from Biot–Savart current loops. Each generator is
+- **The real parts.** Phantoms voxelized from their STL files. The magnet is Jacob White's spokes-and-hub design
+  (200 bar magnets, each from the magnetic charge on its faces, as in his simulator). Coils come from Biot–Savart current loops. Each generator is
   checked against a closed form in `tests/`.
 - **One design for both kernels.** `python -m sim6480 jemris` writes the same shot as JEMRIS input: the B0 map
   as JEMRIS's off-resonance, the sequence through this repository's Pulseq-to-XML converter
@@ -168,7 +168,8 @@ paths are read from `design/`.
 
 **Built-in generators.** Each is checked against a closed form in `tests/`:
 - **Permanent-magnet rings and bar magnets, `generated_rings`:** axial or radial magnetization (dipole sum over
-  the magnet volume); `count` + `width_mm` make a ring of discrete bars. `match_larmor: true` scales the map so its
+  the magnet volume); `count` + `width_mm` make a ring of discrete bars, each from the magnetic charge on its faces
+  (checked against Jacob White's simulator). `match_larmor: true` scales the map so its
   centre sits at `magnet.larmor_hz`.
 - **Current loops, `generated_loops`:** coil pairs and solenoids, via Biot–Savart with elliptic integrals.
   `design/examples/maxwell_gz.yaml` is an anti-Helmholtz z-gradient pair.
@@ -177,48 +178,59 @@ paths are read from `design/`.
 
 ## The magnet
 
-The 6.4800's magnet is an **Aubert pair**: two printed holders (`mri25MagHolder.stl`) facing each other on the z
-axis, with the RF and gradient coils between them (reference photos in the 6.4800 design files).
-`design/examples/aubert_6480.yaml` describes it, and `tools/make_b0_map.py` turns that into
-`design/maps/b0_aubert.npz`, the default B0.
+The 6.4800's magnet is a **spokes-and-hub** magnet: two printed holders facing each other on the z axis, each a hub
+with 50 bar-magnet spokes, and the RF and gradient coils between them. The default is **Jacob White's own design**
+for it, from his magnet simulator (`jacobwhite_magnetSimulator_v4`, 2023-07-31, `testRings.m`, the "105 mT magnet";
+Kuang, Arango, Stockmann, Adalsteinsson, White, ISMRM 2019). `design/examples/spokes_6480.yaml` describes it, and
+`tools/make_b0_map.py` turns that into `design/maps/b0_spokes.npz`, the default B0.
 
 | what | value | from |
 |---|---|---|
-| magnets per holder | 100 bars, in two rings of 50 | CAD |
-| inner ring | radius 40.9–51.7 mm, 3.2 mm wide | CAD |
-| outer ring | radius 61.8–71.8 mm, 5.8 mm wide, offset half a slot | CAD |
-| bar length (along z) | ~30 mm, through the holder and out of its outer face | photos |
-| magnetization | radially in in one holder, out in the other | fit: of axial, radial and mixed layouts, only this reaches ~100 mT |
-| gap between the holders' slot layers | 74 mm, where the field is flattest | fit (the `mri25Cam*` spacers, 3.28–4.22 mm, look like how the gap is trimmed) |
-| grade | Br 1.38 T (N48–N50) | fit: gives 107.3 mT |
+| spokes per holder | 50, each two 1" × 1/2" × 1/8" bars end to end (200 bars in all) | White's design |
+| spoke | 50.8 mm long radially (r = 31–81.8 mm), 12.7 mm tall along z, 3.175 mm wide | White's design |
+| gap between the two rings | 62 mm (31 mm from the centre plane to each ring's inner face) | White's design; also the flattest spacing (below) |
+| magnetization | along each spoke: radially in on one holder, out on the other | White's design |
+| grade | Br 1.23 T (about N38) | White's field weights, calibrated against a measured magnet |
 | polarity | B0 along +z | convention: reversing the magnet mirrors images, as it would on the bench |
 
-This matches what the 6.4800 staff described: ~100 mT from 200 magnets in two 3D-printed hub-and-spoke holders,
-with an adjustable separation that sets the z inhomogeneity. Patrick McDaniel's work is the reference they gave for
-B-field variation and magnet layout.
+**Field model.** Each bar's field comes from the magnetic charge on the two faces its magnetization crosses,
+integrated with Gauss–Legendre points: the method of White's simulator, and exact for uniformly magnetized bars.
+`tests/` checks it against a port of his code on two of his designs (105 mT and 163 mT). An earlier version summed
+6 point dipoles along each bar; it got the centre field right but the field's shape across the phantom wrong by up
+to 2×, because the spokes are long next to their distance from the sample.
 
-**Result:** about 5 kHz (1000 ppm) of B0 variation across the 10 mm phantom. The FID now dies in ~0.3 ms (T2*),
-while the spin echo still refocuses. A gaussmeter map of the bore, or a field-mapping scan, would replace the
-fitted values: save it in the map format and point `fields.b0.file` at it.
+**Result:** his design gives 108.6 mT (4.624 MHz) at the centre, and 10.5 kHz (2300 ppm) of B0 variation across the
+10 mm phantom. The firmware's RF is 4.567 MHz, 1.2 % lower, so `match_larmor` scales the map to it. That is about
+what 10 °C of magnet warming does to NdFeB (−0.12 %/°C), or the spread between magnet grades. The FID dies in about
+0.14 ms (T2*), while the spin echo still refocuses. A gaussmeter map of the bore, or a field-mapping scan, would
+replace the model: save it in the map format and point `fields.b0.file` at it.
+
+**The earlier CAD model**, `design/examples/aubert_6480.yaml` (`design/maps/b0_aubert.npz`), is kept for
+comparison. It read two rings of 50 slots per holder from `mri25MagHolder.stl` (r 40.9–51.7 mm and 61.8–71.8 mm)
+and fitted the rest: ~30 mm bars along z from photos, radial magnetization (which White's design confirms), a gap
+and Br 1.38 T fitted to 107 mT. It gives 5 kHz across the phantom. The two disagree on the bar layout, so the
+holder used in the lab may differ from the 2023 design. Measuring the bars and gap on the real magnet would settle it.
 
 ## Testing a strategy: the holder spacing
 
 The holder spacing is the magnet's tuning knob. `tools/sweep_gap.py` moves both holders symmetrically, retunes
-the RF to each new centre field, and runs a shot each time (numbers below: three-slice phantom, no noise):
+the RF to each new centre field, and runs a shot each time (numbers below: White's design, three-slice phantom, no
+noise; B0 before `match_larmor`):
 
-| spacing (mm) | B0 (mT) | spread over the water | peak echo (µV) |
+| gap between the rings (mm) | B0 (mT) | spread over the water | peak echo (µV) |
 |---|---|---|---|
-| 88 (−8) | 116.9 | 42.7 kHz (8600 ppm) | 8.11 |
-| 92 (−4) | 112.1 | 20.7 kHz | 8.51 |
-| 94 (−2) | 109.6 | 11.2 kHz | 8.53 |
-| **96 (fitted)** | **107.2** | **5.9 kHz (1300 ppm)** | 8.33 |
-| 98 (+2) | 104.7 | 6.8 kHz | 7.92 |
-| 100 (+4) | 102.3 | 12.6 kHz | 7.40 |
-| 104 (+8) | 97.4 | 24.6 kHz | 6.31 |
+| 54 (−8) | 119.9 | 70.3 kHz (13800 ppm) | 7.50 |
+| 58 (−4) | 114.3 | 30.3 kHz | 8.30 |
+| 60 (−2) | 111.5 | 18.5 kHz | 8.64 |
+| **62 (design)** | **108.6** | **10.5 kHz (2300 ppm)** | 8.48 |
+| 64 (+2) | 105.8 | 15.6 kHz | 7.83 |
+| 66 (+4) | 102.9 | 24.7 kHz | 7.01 |
+| 70 (+8) | 97.3 | 42.3 kHz | 5.64 |
 
 Two things to read from it:
-- **The spacing is touchy.** 2 mm either way roughly doubles the field spread. The flattest spacing gives about
-  6 kHz, which is already a fifth of the 30 kHz imaging bandwidth, so B0 variation shows up as image distortion.
+- **The spacing is touchy.** White's 62 mm is the flattest, and 2 mm either way adds half again to the spread or
+  more. Even the flattest spacing gives about 10 kHz, a third of the 30 kHz imaging bandwidth, so B0 variation shows
+  up as image distortion: the end slots of the three-slice phantom land up to ~1 mm from where they are.
 - **The peak echo isn't only an alignment score.** A spin echo refocuses static B0 variation, and the signal grows
   as B0² (magnetization × frequency). So a closer, stronger, *less* uniform magnet can give a slightly bigger
   echo. To score homogeneity, use the spread column, the FID's decay (T2*), or the image's sharpness.
@@ -267,7 +279,8 @@ design/default.yaml (+ your layers)
   - Coils are uniform.
   - Reading JEMRIS's signal back (`load_signal`) hasn't been run against a real cluster output yet.
 - **Not measured yet** (the [guess] and [fit] values):
-  - the magnet's bar length, grade, gap and polarity (fitted, not measured)
+  - the magnet: White's 2023 design, not the lab's magnet as built (it disagrees with the holder CAD on the bar
+    layout), and its polarity
   - gradient-coil geometry: not in the CAD. The gradients are linear at 3000 Hz/mm, from the staff's 30 kHz
     imaging bandwidth across the 10 mm phantom; their coils are opposed pairs, linear in y and z, up to 2 A
   - RF coil resistance; coil turns are taken as 20 from the simulation team notes
