@@ -33,11 +33,11 @@ REQUIRED = {
     "magnet": ["larmor_hz", "temperature_c", "t2dash_s"],
     "fields": ["b0_direction", "b0", "gx", "gy", "gz", "coil"],
     "rf": ["frequency_offset_hz", "flip90_deg", "flip180_deg", "phase_from_timing"],
-    "gradients": ["axis", "drive", "sign"],
-    "receive": ["channel", "noise_nv_per_rthz", "preamp_db", "lna_db", "pga_db", "lpf_mhz", "digital_db",
+    "gradients": ["axis", "angle_deg", "drive", "sign"],
+    "receive": ["channel", "number_format", "noise_nv_per_rthz", "preamp_db", "lna_db", "pga_db", "lpf_mhz", "digital_db",
                 "adc_vpp", "adc_bits", "fs_hz", "rf_leak_counts"],
-    "sequence": ["file", "capture_blocks", "write_ns", "out_rate_hz", "echo_row_samples"],
-    "phantom": ["stl", "liquid", "rotation_deg", "axis", "centre_mm", "voxel_mm"],
+    "sequence": ["file", "protocol", "timing_us", "capture_blocks", "write_ns", "out_rate_hz", "echo_row_samples"],
+    "phantom": ["stl", "liquid", "dry_pockets", "rotation_deg", "axis", "centre_mm", "voxel_mm"],
     "liquids": [],
     "simulation": ["kernel", "adc_dwell_us", "voxel_shape", "max_states", "min_state_mag", "field_map_step_mm",
                    "seed"],
@@ -95,6 +95,16 @@ def validate(design):
         raise ValueError("receive.adc_bits: the FPGA packing carries 14-bit samples")
     if design["receive"]["channel"] not in ("ch1", "ch2"):
         raise ValueError("receive.channel must be ch1 or ch2")
+    if design["receive"]["number_format"] not in ("twos_complement", "offset_binary"):
+        raise ValueError("receive.number_format must be twos_complement or offset_binary")
+    if design["sequence"]["protocol"] not in ("firmware", "timed"):
+        raise ValueError("sequence.protocol must be firmware (timings from the Teensy code) or timed (sequence.timing_us)")
+    if design["sequence"]["protocol"] == "timed":
+        need = {"s90", "e90", "s180", "e180", "sdeph", "sro", "srw", "erw"}
+        if not isinstance(design["sequence"]["timing_us"], dict) or need - set(design["sequence"]["timing_us"]):
+            raise KeyError(f"sequence.protocol timed needs sequence.timing_us with {sorted(need)}")
+    if design["gradients"]["angle_deg"] is not None and design["phantom"]["axis"] != "x":
+        raise ValueError("gradients.angle_deg turns the readout in the y-z plane: the phantom's axis must be x")
     if design["simulation"]["kernel"] not in ("mrzero",):
         raise ValueError("simulation.kernel: only mrzero runs here (JEMRIS: use `sim6480 jemris` to write its inputs)")
     return design

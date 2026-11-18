@@ -40,14 +40,19 @@ class Shot:
         return float(np.abs(self.coil_v[m]).max() * 1e6)
 
 
-def readout_hz_per_mm(maps, axis, drive, b0_direction):
+def readout_hz_per_mm(maps, axis, drive, b0_direction, angle_deg=None):
     """The readout gradient's strength at the centre (Hz/mm at this drive), from its map: what a lab calibration
-    with a known phantom would measure."""
+    with a known phantom would measure. With angle_deg the readout is cos on gy plus sin on gz, measured along
+    that direction."""
     d = 0.5
-    pts = np.zeros((2, 3))
-    i = "xyz".index(axis)
-    pts[0, i], pts[1, i] = -d, d
-    g = maps[f"g{axis}"].sample(pts)[("xyz").index(b0_direction)]
+    if angle_deg is None:
+        direction = {axis: 1.0}
+    else:
+        th = np.radians(angle_deg)
+        direction = {"y": np.cos(th), "z": np.sin(th)}
+    u = np.array([direction.get(a, 0.0) for a in "xyz"])
+    pts = np.array([-d * u, d * u])
+    g = sum(w * maps[f"g{a}"].sample(pts)[("xyz").index(b0_direction)] for a, w in direction.items())
     return float(GAMMA_BAR * (g[1] - g[0]) / (2 * d) * drive)
 
 
@@ -103,6 +108,6 @@ def simulate(design, rng=None):
     coil_v, _ = kernel_mrzero.run(plan, ph, data, design)
     cap = receive.capture(plan, coil_v, design, rng)
     g = design["gradients"]
-    hz_mm = readout_hz_per_mm(maps, g["axis"], g["drive"], design["fields"]["b0_direction"])
+    hz_mm = readout_hz_per_mm(maps, g["axis"], g["drive"], design["fields"]["b0_direction"], g["angle_deg"])
     proc = process.run(cap.raw, plan, design, abs(hz_mm))
     return Shot(design, plan, ph, maps, fields, coil_v, cap, proc, hz_mm, time.time() - start)

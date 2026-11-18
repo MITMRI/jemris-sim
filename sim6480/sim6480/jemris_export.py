@@ -106,6 +106,8 @@ def export(design, out_dir, shot=None):
     direction = design["fields"]["b0_direction"]
     slopes = _centre_slopes(maps, direction, ph.points_mm)
     axis = design["gradients"]["axis"]
+    if design["gradients"]["angle_deg"] is not None:
+        raise ValueError("the JEMRIS export takes one readout axis; gradients.angle_deg isn't supported there yet")
 
     plan = sequence.build(design, hz_per_m_per_drive=slopes[axis][0])
     fields = fieldmaps.voxel_fields(maps, ph.points_mm, plan.f_rf_hz)

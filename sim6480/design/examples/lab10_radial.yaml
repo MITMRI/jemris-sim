@@ -1,0 +1,26 @@
+# The 2026-11-13 radial phantom scan (protocol Lab10_180_v1): 64 shots, the readout turned 360/64 degrees per shot in
+# the y-z plane. One shot per design; tools/radial_scan.py runs all 64 and compares them with the capture.
+#
+#   [capture]  RF pulses where the capture's ADC clips: 90° 28-119 µs, 180° 1421-1578 µs
+#   [capture]  gradient lobes from the switching spikes at 2240, 3570 and 4240 µs. The rewind (3570-4240) is as
+#              long as a dephase lobe from the end of the 180° to 2240, so the dephase starts at 1578 (hidden in the
+#              180°'s saturation): the course firmware's dephase / readout / rewind with longer lobes. The readout
+#              then undoes the dephase at 2902 µs; the spin echo is at 2925 µs; the capture's echo peaks at 2939
+#   [capture]  300 x 1024 samples (6.1 ms)
+#   [fit]      readout strength: projections of the three-slice phantom fit best at about 6000 Hz/mm, drive 2 of the
+#              3000 Hz/mm maps. The firmware's DAC codes were y 128 cos(angle), z 128 sin(angle)
+#   [fit]      phantom: the projections fit best with water in the outer two slots only (correlation 0.79 against
+#              0.72 for all three): the middle pocket (index 1) is dry. Confirm with the lab
+#   [capture]  processed at 200 kS/s, 64 samples around the echo, as the lab did
+gradients:
+  angle_deg: 0.0
+  drive: 2.0
+sequence:
+  protocol: timed
+  timing_us: {s90: 28, e90: 119, s180: 1421, e180: 1578, sdeph: 1578, sro: 2240, srw: 3570, erw: 4240}
+  capture_blocks: 300
+  out_rate_hz: 200.0e3
+  echo_row_samples: 64
+phantom:
+  stl: mri25threeSlice.stl
+  dry_pockets: [1]

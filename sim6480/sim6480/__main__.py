@@ -27,7 +27,11 @@ def plot(shot, path):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    p, ax = shot.plan, shot.design["gradients"]["axis"]
+    p = shot.plan
+    g = shot.design["gradients"]
+    # A turned readout is shown against the truth only along y (0°) or z (90°), where profile() can give it.
+    ax = g["axis"] if g["angle_deg"] is None else {0.0: "y", 90.0: "z"}.get(float(g["angle_deg"]) % 180)
+    name = g["axis"] if g["angle_deg"] is None else f"the readout at {g['angle_deg']:g}° in y-z"
     fig, axs = plt.subplots(3, 1, figsize=(9, 9))
     t = p.adc_times_s * 1e6
     axs[0].plot(t, np.abs(shot.coil_v) * 1e6, lw=0.8)
@@ -42,10 +46,11 @@ def plot(shot, path):
     axs[1].set(xlabel="time from trigger (µs)", ylabel="ADC counts",
                title=f"{shot.design['receive']['channel']} as captured (RF pulses saturate the receiver)")
     pos, img = shot.process.positions_mm, np.abs(shot.process.image)
-    tx, tw = shot.phantom.profile(ax)
     axs[2].plot(pos, img / img.max(), label="simulated image")
-    axs[2].plot(tx, tw / tw.max(), "k--", lw=1, label="phantom (truth)")
-    axs[2].set(xlabel=f"{ax} (mm)", ylabel="normalized", title=f"1-D image along {ax}")
+    if ax:
+        tx, tw = shot.phantom.profile(ax)
+        axs[2].plot(tx, tw / tw.max(), "k--", lw=1, label="phantom (truth)")
+    axs[2].set(xlabel="position along the readout (mm)", ylabel="normalized", title=f"1-D image along {name}")
     axs[2].legend()
     fig.tight_layout()
     fig.savefig(path, dpi=130)
@@ -87,7 +92,8 @@ def main(argv=None):
         shot = simulate(design)
         o = shot.fields.off_resonance_hz
         print(f"simulated in {shot.seconds:.1f} s: {int(shot.phantom.mask.sum())} water voxels "
-              f"({shot.phantom.water_mm3:.0f} mm^3), readout {shot.hz_per_mm:.0f} Hz/mm along {design['gradients']['axis']}")
+              f"({shot.phantom.water_mm3:.0f} mm^3), readout {shot.hz_per_mm:.0f} Hz/mm along "
+              f"{design['gradients']['axis'] if design['gradients']['angle_deg'] is None else str(design['gradients']['angle_deg']) + ' deg in y-z'}")
         print(f"off-resonance over the water: {o.min():.0f} .. {o.max():.0f} Hz")
         print(f"peak echo at the coil: {shot.peak_coil_uv:.2f} µV  (noise {shot.capture.noise_v_rms * 1e6:.2f} µV rms)")
         if args.plot:

@@ -85,8 +85,9 @@ def build(design):
     yp = -np.sin(th) * u + np.cos(th) * w
     pts = np.column_stack([xp.ravel(), yp.ravel()])
     wet = np.zeros(len(pts), dtype=bool)
-    for pocket in ph.pockets:
-        wet |= phantoms.inside(pts, pocket.outline)
+    for i, pocket in enumerate(ph.pockets):
+        if i not in p["dry_pockets"]:               # an empty pocket holds no liquid
+            wet |= phantoms.inside(pts, pocket.outline)
     wet = wet.reshape(X.shape)
 
     # Along the cylinder: the pockets' depth, centred on centre_mm.

@@ -20,7 +20,8 @@
 #   [guess]     not measured yet: change it once it is
 
 magnet:
-  larmor_hz: 4.567e6            # [firmware] RF frequency of pulsecmd453.h: the field the RF is tuned to (107.3 mT)
+  larmor_hz: 4.6088e6           # [capture] f0 from the FID of the 2026-11-13 phantom scan (108.2 mT); the firmware's
+                                #   RF (pulsecmd453.h) is 4.567 MHz, and White's magnet design gives 4.624 MHz
   temperature_c: 22             # sample temperature: sets the equilibrium magnetization
   t2dash_s: 0.002               # [guess] reversible dephasing inside each voxel (field roughness below the grid)
 
@@ -70,6 +71,8 @@ rf:
 
 gradients:                      # the sequence's gradient drive
   axis: z                       # [firmware] readout channel of this shot: x, y or z (the firmware alternates z, y)
+  angle_deg: null               # turn the readout in the y-z plane instead: cos(angle) on gy, sin(angle) on gz, as
+                                #   the 2026-11-13 radial scan did (design/examples/lab10_radial.yaml). null: use axis
   drive: 1.0                    # [firmware] drive level during the lobes, in the gradient maps' units. [schematic]
                                 # the drive is a DAC7564 code -> OPA548 current; with a coil-pair map (loops:),
                                 # amps_per_drive is that current, readable on the GRAD monitor shunts
@@ -77,9 +80,15 @@ gradients:                      # the sequence's gradient drive
 
 receive:                        # [afe] from coil voltage to ADC counts, on the coil's channel ([schematic] AFE5808A:
                                 # LNA 12/18/24 dB, PGA 24/30 dB, 14-bit ADC; the settings below match)
-  channel: ch2                  # [fpga] the one RF coil is wired to ch2; ch1 is empty
-  noise_nv_per_rthz: 1.0        # [guess] coil + AFE input noise density
-  preamp_db: 0                  # [guess] the two PH23 amplifiers on the RFB path: gain not known yet
+  channel: ch1                  # [capture] the coil's signal is on ch1 in the 2026-11-13 capture (we had been told ch2)
+  number_format: offset_binary  # [capture] the ADC writes offset binary (8192 = 0 V): the capture's quiet samples sit at
+                                #   ~8250. twos_complement for the old assumption
+  noise_nv_per_rthz: 0.4        # [capture] coil + amplifier noise, referred to the coil. With the gain below, the
+                                #   radial scan's noise (12 counts rms at 200 kS/s) and echo (363 counts) both match
+                                #   (tools/radial_scan.py). Gain and noise trade off against the coil's sensitivity
+                                #   (its turns are a guess): only signal over noise is pinned down, and it is
+  preamp_db: 29                 # [capture] the two PH23 amplifiers on the RFB path: what puts the simulated radial
+                                #   scan's echo and FID at the capture's counts (tools/radial_scan.py)
   lna_db: 24                    # [afe] firmware register 0x34
   pga_db: 30                    # [afe] firmware register 0x33
   lpf_mhz: 10                   # [afe] firmware register 0x33
@@ -94,6 +103,9 @@ receive:                        # [afe] from coil voltage to ADC counts, on the 
 
 sequence:
   file: null                    # a Pulseq .seq to simulate instead of the firmware's spin echo (advanced)
+  protocol: firmware            # firmware: event times read from the Teensy code; timed: from timing_us below
+  timing_us: null               # for timed: block edges in µs from the trigger, {s90, e90, s180, e180, sdeph, sro, srw,
+                                #   erw} (RF pulses, then dephase / readout / rewind lobes); see lab10_radial.yaml
   capture_blocks: 128           # [fpga] N in the capture command: N x 1024 samples (2.62 ms)
   write_ns: null                # [firmware] time per Teensy GPIO write; null = the firmware's 3.333 ns
   out_rate_hz: 100.0e3          # processing: downconverted sample rate (one sample every 10 µs)
@@ -102,6 +114,7 @@ sequence:
 phantom:
   stl: mri25threeSlice.stl      # [stl] mri25_10x10x10.stl, mri25threeSlice.stl or threeSlit.stl
   liquid: doped_water           # one of `liquids` below
+  dry_pockets: []               # pockets left empty, by index in the STL (three-slice: 0, 1, 2 from one side)
   rotation_deg: 0               # about the phantom's own axis; 0: the slots' narrow side along the readout axis
   axis: x                       # scanner axis the phantom's cylinder axis points along
   centre_mm: {x: 0, y: 0, z: 0} # where the phantom sits (moves it through the field maps)

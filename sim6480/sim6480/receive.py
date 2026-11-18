@@ -72,5 +72,9 @@ def capture(plan, baseband_v, design, rng=None):
     counts = {r["channel"]: to_counts(v_coil + n_coil), other: _quantize(noise() * gain, r["adc_vpp"], r["adc_bits"])}
 
     sp = repos.sigproc(design)
-    words = sp.transfer.pack_words(counts["ch1"], counts["ch2"])     # select mode: ch1 low, ch2 high
+    if r["number_format"] == "offset_binary":     # what the real ADC writes: 8192 is zero volts
+        fields = {k: c.astype(np.int32) + 8192 for k, c in counts.items()}
+    else:
+        fields = counts
+    words = sp.transfer.pack_words(fields["ch1"], fields["ch2"])     # select mode: ch1 low, ch2 high
     return Capture(t, v_coil, counts, words, sp.transfer.words_to_bytes(words), float(np.std(n_coil)))

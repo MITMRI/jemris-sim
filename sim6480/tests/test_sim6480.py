@@ -207,3 +207,37 @@ def test_any_pulseq_sequence(shot_z):
     s = simulate_sequence(shot_z.design, shot_z.plan.seq, maps=shot_z.maps, phantom=shot_z.phantom)
     np.testing.assert_allclose(s.t_s, shot_z.plan.adc_times_s, atol=1e-9)
     np.testing.assert_allclose(s.coil_v, shot_z.coil_v, rtol=1e-4, atol=1e-4 * np.abs(shot_z.coil_v).max())
+
+
+def test_offset_binary_round_trip(shot_z):
+    """The capture is packed as offset binary (8192 = 0 V, as the real ADC writes) and processing undoes it: the
+    processed counts are the simulated counts, and the packed fields of a quiet stretch sit near 8192."""
+    c = shot_z.capture
+    ch = shot_z.design["receive"]["channel"]
+    np.testing.assert_array_equal(shot_z.process.counts, c.counts[ch])
+    field = (c.words & 0x3FFF) if ch == "ch1" else ((c.words >> 16) & 0x3FFF)
+    assert abs(np.median(field) - 8192) < 50
+
+
+def test_dry_pocket():
+    """Leaving the three-slice phantom's middle pocket dry leaves two thirds of the water."""
+    from sim6480 import phantom as phantom_mod
+    full = phantom_mod.build(load_design()).water_mm3
+    two = phantom_mod.build(load_design(overrides=["phantom.dry_pockets=[1]"])).water_mm3
+    assert two == pytest.approx(full * 2 / 3, rel=0.05)
+
+
+def test_lab10_radial_shot():
+    """One shot of the 2026-11-13 radial scan's design: its timed protocol, a readout turned 45° in y-z at
+    6000 Hz/mm, the echo where the readout undoes the dephase lobe, and both gradient channels driven."""
+    from sim6480.simulate import simulate
+    d = load_design([PACKAGE_ROOT / "design" / "default.yaml", EXAMPLES / "lab10_radial.yaml"],
+                    ["gradients.angle_deg=45", "receive.noise_nv_per_rthz=0"])
+    shot = simulate(d)
+    assert shot.hz_per_mm == pytest.approx(6000, rel=0.01)
+    assert shot.plan.gradient_echo_s == pytest.approx(2.902e-3, abs=1e-6)
+    assert shot.process.row.t_centre_s == pytest.approx(2.902e-3, abs=10e-6)
+    assert shot.process.row.labels["axis"] == "yz45"
+    grads = {c for i in shot.plan.seq.block_events for c in "xyz"
+             if getattr(shot.plan.seq.get_block(i), f"g{c}") is not None}
+    assert grads == {"y", "z"}

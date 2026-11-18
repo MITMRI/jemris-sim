@@ -38,14 +38,19 @@ def _us(x):
 
 
 def build(design, firmware=None, hz_per_m_per_drive=None):
-    """Build the Pulseq sequence for one shot of the design (readout along gradients.axis).
+    """Build the Pulseq sequence for one shot of the design (readout along gradients.axis, or turned to
+    gradients.angle_deg in the y-z plane). sequence.protocol picks the event times: `firmware` reads them from the
+    Teensy code; `timed` takes them from sequence.timing_us (a protocol the firmware here doesn't have, such as the
+    Lab10 radial scan).
 
     hz_per_m_per_drive: give the gradient in real units instead (for JEMRIS, which places spins at their true
     positions and so needs the true, linear, gradient); default: the field-map encoding units MRzero uses.
     """
-    timeline, _ = repos.pulseseq(design)
-    fw_seq = timeline.build_sequence(firmware, design["sequence"]["write_ns"])
-    step = {s.name: s for s in fw_seq.timed_steps if s.name != "Clamp"}
+    timed = design["sequence"]["protocol"] == "timed"
+    if not timed:
+        timeline, _ = repos.pulseseq(design)
+        fw_seq = timeline.build_sequence(firmware, design["sequence"]["write_ns"])
+        step = {s.name: s for s in fw_seq.timed_steps if s.name != "Clamp"}
 
     f_rf = design["magnet"]["larmor_hz"] + design["rf"]["frequency_offset_hz"]
     dwell_us = design["simulation"]["adc_dwell_us"]
@@ -62,25 +67,29 @@ def build(design, firmware=None, hz_per_m_per_drive=None):
     seq = pp.Sequence(system=sysopts)
 
     # Block edges, in whole microseconds (the firmware's times rounded; well under one 10 µs processing sample).
-    e = {
-        "s90": _us(step["90° RF pulse"].start_us), "e90": _us(step["90° RF pulse"].end_us),
-        "s180": _us(step["180° RF pulse"].start_us), "e180": _us(step["180° RF pulse"].end_us),
-        "sdeph": _us(step["Dephase gradient"].start_us), "sro": _us(step["Readout gradient"].start_us),
-        "srw": _us(step["Rewind gradient"].start_us), "erw": _us(step["Rewind gradient"].end_us),
-        "cap": int(math.floor(capture_us)),
-    }
+    if timed:
+        e = {k: _us(v) for k, v in design["sequence"]["timing_us"].items()}
+        e["cap"] = int(math.floor(capture_us))
+        spin_echo_us = 2 * (e["s180"] + e["e180"]) / 2 - (e["s90"] + e["e90"]) / 2
+        gradient_echo_us = e["sro"] + (e["sro"] - e["sdeph"])      # where the readout undoes the dephase lobe
+    else:
+        e = {
+            "s90": _us(step["90° RF pulse"].start_us), "e90": _us(step["90° RF pulse"].end_us),
+            "s180": _us(step["180° RF pulse"].start_us), "e180": _us(step["180° RF pulse"].end_us),
+            "sdeph": _us(step["Dephase gradient"].start_us), "sro": _us(step["Readout gradient"].start_us),
+            "srw": _us(step["Rewind gradient"].start_us), "erw": _us(step["Rewind gradient"].end_us),
+            "cap": int(math.floor(capture_us)),
+        }
+        spin_echo_us, gradient_echo_us = fw_seq.spin_echo_us, fw_seq.gradient_echo_us
 
     adc_times, rf_windows, phases = [], [], []
 
-    def adc_block(t0, t1, grad=None):
+    def adc_block(t0, t1, grads=()):
         n = int((t1 - t0) // dwell_us)
         if n <= 0:
             return
         adc = pp.make_adc(num_samples=n, dwell=dwell_us * 1e-6, system=sysopts)
-        if grad is None:
-            seq.add_block(pp.make_delay((t1 - t0) * 1e-6), adc)
-        else:
-            seq.add_block(grad, adc, pp.make_delay((t1 - t0) * 1e-6))
+        seq.add_block(*grads, adc, pp.make_delay((t1 - t0) * 1e-6))
         adc_times.extend((t0 + (np.arange(n) + 0.5) * dwell_us) * 1e-6)
 
     def rf_block(t0, t1, flip_deg, default_phase_deg):
@@ -91,9 +100,15 @@ def build(design, firmware=None, hz_per_m_per_drive=None):
         rf_windows.append((t0 * 1e-6, t1 * 1e-6))
         phases.append(phase)
 
+    if g["angle_deg"] is None:
+        direction = {g["axis"]: 1.0}
+    else:                                           # turned in the y-z plane: cos on gy, sin on gz
+        th = math.radians(g["angle_deg"])
+        direction = {"y": math.cos(th), "z": math.sin(th)}
+
     def lobe(t0, t1, amplitude):
-        return pp.make_trapezoid(g["axis"], amplitude=amplitude, flat_time=(t1 - t0 - 2) * 1e-6, rise_time=1e-6,
-                                 system=sysopts)
+        return [pp.make_trapezoid(a, amplitude=amplitude * w, flat_time=(t1 - t0 - 2) * 1e-6, rise_time=1e-6,
+                                  system=sysopts) for a, w in direction.items() if abs(w) > 1e-12]
 
     seq.add_block(pp.make_delay(e["s90"] * 1e-6))      # before the 90°: no spins tipped, and MRzero drops ADC here
     rf_block(e["s90"], e["e90"], design["rf"]["flip90_deg"], 0.0)
@@ -109,10 +124,10 @@ def build(design, firmware=None, hz_per_m_per_drive=None):
     if not ok:
         raise RuntimeError(f"the Pulseq sequence has timing errors: {report[:3]}")
     seq.set_definition("Name", "sim6480_spin_echo")
-    seq.set_definition("ReadoutAxis", g["axis"])
+    seq.set_definition("ReadoutAxis", g["axis"] if g["angle_deg"] is None else f"yz {g['angle_deg']:g} deg")
 
-    return SequencePlan(seq, f_rf, np.asarray(adc_times), rf_windows, fw_seq.spin_echo_us * 1e-6,
-                        fw_seq.gradient_echo_us * 1e-6, capture_us * 1e-6, phases,
+    return SequencePlan(seq, f_rf, np.asarray(adc_times), rf_windows, spin_echo_us * 1e-6,
+                        gradient_echo_us * 1e-6, capture_us * 1e-6, phases,
                         (e["sro"] * 1e-6, e["srw"] * 1e-6))
 
 

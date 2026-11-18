@@ -15,6 +15,7 @@ python -m sim6480 numbers                                   # scaling: B0, M0, E
 python -m sim6480 export-maps maps/                         # the maps a shot uses, as files you can edit
 python -m sim6480 jemris out/                               # the same shot as JEMRIS input, for the cluster
 python tools/sweep_gap.py --shots                           # magnet holder spacing vs field spread and echo
+python tools/radial_scan.py                                 # the 2026-11-13 radial scan, simulated vs captured (~2 min)
 python demo/demo.py                                         # maps + Pulseq sequences in, coil voltage out (~20 s)
 python -m pytest tests -q
 ```
@@ -22,7 +23,7 @@ python -m pytest tests -q
 ![one simulated shot](docs/shot_z.png)
 
 *Default design (Jacob White's spokes-and-hub magnet), readout along z, three-slice phantom. Top: coil voltage, with RF pulses in red and the readout
-gradient in green. Middle: ch2 counts as captured. Bottom: the image the lab's processing makes, against the
+gradient in green. Middle: ch1 counts as captured. Bottom: the image the lab's processing makes, against the
 phantom.*
 
 ## Demo: maps and sequences in, voltage out
@@ -37,8 +38,8 @@ phantom.*
 
 | strategy | what changes | result |
 |---|---|---|
-| a. RF pulse length sweep | the sequence only | peak FID voltage 8.46 µV at 32 µs, the true 90° (33 µs). Past 90° the voltage falls: the peak voltage is the alignment score |
-| b. the same spin echo on three magnets | the B0 map only | the FID fades in 0.14 ms (White's magnet), 0.06 ms (holders 2 mm further apart), > 0.5 ms (ideal). The echo comes back on all three: 8.41, 8.17, 8.41 µV |
+| a. RF pulse length sweep | the sequence only | peak FID voltage 8.61 µV at 32 µs, the true 90° (33 µs). Past 90° the voltage falls: the peak voltage is the alignment score |
+| b. the same spin echo on three magnets | the B0 map only | the FID fades in 0.14 ms (White's magnet), 0.06 ms (holders 2 mm further apart), > 0.5 ms (ideal). The echo comes back on all three: 8.56, 8.17, 8.56 µV |
 | c. readout with two gradient coils | the gz map only | a linear map and a Maxwell pair give nearly the same image. With an ideal B0 the slots come out much sharper, so on this scanner the magnet limits the image, not the gradient coil |
 
 To try your own: build a sequence with pypulseq (or write a `.seq`) and call
@@ -77,26 +78,26 @@ distribution graph* (PDG) simulator:
 
 | input | form | default |
 |---|---|---|
-| B0 map | vector field (T) on a grid, `.npz`/`.h5` | the 6.4800's **spokes-and-hub magnet**, Jacob White's design (`design/maps/b0_spokes.npz`): 108.6 mT along z, scaled to the RF's 107.3 mT; −3.2 to +7.2 kHz across the phantom |
+| B0 map | vector field (T) on a grid, `.npz`/`.h5` | the 6.4800's **spokes-and-hub magnet**, Jacob White's design (`design/maps/b0_spokes.npz`): 108.6 mT along z, scaled to the measured 108.2 mT; −3.2 to +7.2 kHz across the phantom |
 | gx, gy, gz maps | vector field (T) per unit of drive | linear, 3000 Hz/mm per drive; or coils by their dimensions (`loops:`, e.g. a **Maxwell / anti-Helmholtz pair**) |
 | RF coil map | vector field (T per amp) | 20-turn solenoid on the 19 mm coil form, axis x |
-| sequence | the firmware's timings, or a `.seq` | firmware spin echo, 128 × 1024 samples at 50 MS/s |
+| sequence | the firmware's timings, timings from the design (`sequence.protocol: timed`), or a `.seq` | firmware spin echo, 128 × 1024 samples at 50 MS/s; `design/examples/lab10_radial.yaml` is the 2026-11-13 radial scan |
 | phantom + liquid | STL + T1, T2, proton density | three-slice phantom, doped water (T1 0.2 s, T2 0.15 s) |
-| receive chain | gains, noise, ADC | AFE5808A: LNA 24 dB + PGA 30 dB, 14-bit, 2 Vpp, 1 nV/√Hz |
+| receive chain | gains, noise, ADC | coil on ch1; preamps 29 dB + AFE5808A LNA 24 dB + PGA 30 dB; 0.4 nV/√Hz; 14-bit offset binary, 2 Vpp (all calibrated on the 2026-11-13 capture) |
 
 **Outputs, concretely:**
 
 | output | value for the default design |
 |---|---|
-| coil voltage vs time | complex baseband, V; peak echo **8.3 µV**; the FID decays in ~0.14 ms (magnet T2*) |
-| noise at the coil | 3.2 µV rms in the 10 MHz bandwidth |
-| ADC counts | about ±35 counts of echo on ch2 (8.3 µV × 54 dB ÷ 0.12 mV per count); RF pulses saturate |
+| coil voltage vs time | complex baseband, V; peak echo **8.4 µV**; the FID decays in ~0.14 ms (magnet T2*) |
+| noise at the coil | 1.3 µV rms in the 10 MHz bandwidth |
+| ADC counts | about ±1000 counts of echo on ch1 (8.4 µV × 83 dB ÷ 0.12 mV per count); RF pulses saturate |
 | FPGA bytes | exactly what the laptop receives (6480-signal-processing's packing) |
 | 1-D image | along the readout axis, 0.52 mm pixels: three slices for z, one block for y |
 
-**Scale check.** Water at 107 mT and 22 °C has M0 = 3.5×10⁻⁴ A/m. With the coil's 1.05 mT/A, reciprocity gives
-10.6 nV per mm³ of water tipped 90°. For the phantom's 853 mm³ that is about 9 µV. The full simulation gives
-8.3 µV, a little less because of T2′ and the coil's falloff (`python -m sim6480 numbers`).
+**Scale check.** Water at 108 mT and 22 °C has M0 = 3.5×10⁻⁴ A/m. With the coil's 1.05 mT/A, reciprocity gives
+10.8 nV per mm³ of water tipped 90°. For the phantom's 853 mm³ that is about 9.2 µV. The full simulation gives
+8.4 µV, a little less because of T2′ and the coil's falloff (`python -m sim6480 numbers`).
 
 ## Built on MRzero and JEMRIS
 
@@ -200,8 +201,8 @@ integrated with Gauss–Legendre points: the method of White's simulator, and ex
 to 2×, because the spokes are long next to their distance from the sample.
 
 **Result:** his design gives 108.6 mT (4.624 MHz) at the centre, and 10.5 kHz (2300 ppm) of B0 variation across the
-10 mm phantom. The firmware's RF is 4.567 MHz, 1.2 % lower, so `match_larmor` scales the map to it. That is about
-what 10 °C of magnet warming does to NdFeB (−0.12 %/°C), or the spread between magnet grades. The FID dies in about
+10 mm phantom. The 2026-11-13 capture measured 4.6088 MHz, 0.3 % lower, so `match_larmor` scales the map to it:
+about what 3 °C of magnet warming does to NdFeB (−0.12 %/°C). The course firmware's RF, 4.567 MHz, is 1.2 % lower. The FID dies in about
 0.14 ms (T2*), while the spin echo still refocuses. A gaussmeter map of the bore, or a field-mapping scan, would
 replace the model: save it in the map format and point `fields.b0.file` at it.
 
@@ -261,16 +262,50 @@ design/default.yaml (+ your layers)
   ├─ phantom.py     STL phantom → voxels (6480-pulse-sequence)
   ├─ sequence.py    firmware timings → Pulseq .seq (6480-pulse-sequence)
   ├─ kernel_mrzero.py   MRzero PDG → coil voltage (V)
-  ├─ receive.py     RF at 4.567 MHz, noise, AFE gain, RF saturation, 14-bit ADC → FPGA words → bytes
+  ├─ receive.py     RF at magnet.larmor_hz, noise, preamp and AFE gain, RF saturation, 14-bit ADC → FPGA words → bytes
   ├─ process.py     the lab's own processing: unpack, downconvert, echo row, image (6480-signal-processing)
   └─ jemris_export.py   the same experiment as JEMRIS files (sample.h5, sequence.xml, simu.xml, coils)
 ```
 
+## Checked against a real capture
+
+`tools/radial_scan.py` simulates the 2026-11-13 radial phantom scan (`design/examples/lab10_radial.yaml`: 64
+readout angles in y-z, the Lab10 protocol's timing read off the capture) and puts both through the same
+processing. With the calibrated design:
+
+| | simulated | captured |
+|---|---|---|
+| echo (counts) | 332 | 363 |
+| FID at 0.16-0.25 ms (counts) | 149 | 150 |
+| noise (counts rms at 200 kS/s) | 12.5 | 12.0 |
+| echo time (ms) | 2.901 | 2.939 |
+| projections (frequency × angle) | correlation 0.82 | |
+| 2-D image (the lab's encoding matrix) | correlation 0.89 | |
+
+What the capture set: f0 (4.6088 MHz, from its FID), the coil's channel (ch1), the ADC's number format (offset
+binary), the preamp gain and noise (from the echo, FID and noise in counts), the radial scan's timing and readout
+strength (6000 Hz/mm), and that only two of the three slots held water. Before calibration (no preamp gain) the simulated
+echo was about 30 times too small in counts.
+
+![the radial scan, simulated and captured: projections and images](docs/radial.png)
+
+What still doesn't match:
+- **The FID's shape.** The real FID stays flat to ~0.27 ms, drops to a null at 0.40 ms and has a strong sidelobe
+  (sinc-like, as a linear field across the sample would give); the magnet model decays smoothly to a null at about
+  the same time. A small steady gradient current, or a shim offset, would do it: check that the gradients idle at
+  zero.
+- **The echo time,** 38 µs later in the capture: more dephase than the timing assumes (the dephase lobe's start is
+  hidden in the 180° pulse's saturation), or a gradient that ramps slowly.
+- **The noise spectrum.** The capture's noise has a hump 100 times the floor between 3 and 8 MHz (the tuned coil);
+  the model's is flat to 10 MHz. The level near f0 matches.
+- **Switching spikes** from the gradients, as big as an RF pulse, aren't modelled.
+
 ## Known limits
 
-- **One shot, 1-D images.** The firmware's spin echo with a single readout gradient. Any Pulseq sequence can be
-  given instead (`simulate_sequence`, coil voltage only); phase encoding for 2-D works in principle but hasn't
-  been tried here.
+- **One shot at a time.** A shot is the firmware's spin echo, or a timed protocol, with one readout gradient
+  (along an axis, or turned in y-z). `tools/radial_scan.py` runs a 64-angle radial scan; the 2-D reconstruction
+  uses the lab's own encoding matrix from the capture. Any Pulseq sequence can be given instead
+  (`simulate_sequence`, coil voltage only); phase encoding for 2-D hasn't been tried.
 - **B0 direction.** MRzero assumes one common B0 direction. The maps' local direction sets each voxel's
   frequency and gradient component, but a field that rotates a lot across the sample is beyond the PDG model.
   JEMRIS handles that better.
@@ -281,11 +316,13 @@ design/default.yaml (+ your layers)
 - **Not measured yet** (the [guess] and [fit] values):
   - the magnet: White's 2023 design, not the lab's magnet as built (it disagrees with the holder CAD on the bar
     layout), and its polarity
-  - gradient-coil geometry: not in the CAD. The gradients are linear at 3000 Hz/mm, from the staff's 30 kHz
-    imaging bandwidth across the 10 mm phantom; their coils are opposed pairs, linear in y and z, up to 2 A
-  - RF coil resistance; coil turns are taken as 20 from the simulation team notes
-  - preamp gain, noise density, T2′ (the ADC's 2 Vpp full scale is fixed by the AFE5808A)
-  - whether the firmware's register 0x3B setting (0x3B00C4) turns on 24 dB of attenuation: its own comments say
-    it does. `receive.digital_db` is 0 until a capture's noise floor shows which
+  - gradient-coil geometry: not in the CAD. The gradients are linear maps of 3000 Hz/mm per drive; the radial
+    scan's projections fit 6000 Hz/mm at its DAC code 128 (drive 2). The course firmware's drive is still a guess
+  - RF coil resistance and turns (20, from the simulation team notes). The capture pins signal over noise, not
+    signal and noise separately: more turns with less gain and the same noise would fit it too
+  - the preamp gain (29 dB) and `receive.digital_db` (0) are one number as far as the capture can tell: whether
+    the firmware's register 0x3B setting (0x3B00C4) turns on 24 dB of attenuation is still open
+  - T2′, and the liquids' T1 and T2
+  - which phantom the radial scan used: the projections fit the three-slice phantom with its middle slot dry
 - **Orientation.** With `gradients.sign: -1` (the firmware's default) the image matches the phantom's
   orientation. Flipping the sign mirrors it, as it would on the bench.
